@@ -279,7 +279,7 @@ export default function GeneratePage() {
           <span style={{
             fontFamily: "inherit",
             fontWeight: 700,
-            fontSize: Math.max(11, pW(ir, 0.032)),
+            fontSize: Math.max(14, pW(ir, 0.055)),
             letterSpacing: "0.18em",
             textTransform: "uppercase",
             color: "#7a4a52",
