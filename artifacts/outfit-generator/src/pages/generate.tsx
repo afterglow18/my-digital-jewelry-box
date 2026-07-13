@@ -23,10 +23,11 @@ import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
 
 // ── Layout constants (same as wardrobe.tsx) ───────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
-const NAV_H = 90;
-const PINK  = "#F4D6DD";
+const IMG_W    = 1024;
+const IMG_H    = 1536;
+const NAV_H    = 90;
+const HEADER_H = 88;   // px reserved for the "Matchmaker" title above the vanity
+const PINK     = "#F4D6DD";
 
 const LM = {
   doorL: 0.207,
@@ -235,12 +236,18 @@ export default function GeneratePage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
+    <>
+      <header className="px-4 pt-8 pb-2">
+        <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Matchmaker</h1>
+        <p className="font-medium text-muted-foreground text-sm">Find your perfect look.</p>
+      </header>
+
     <div
       ref={containerRef}
       style={{
         position: "relative",
         width: "100%",
-        height: `min(calc(100dvh - ${NAV_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
+        height: `min(calc(100dvh - ${NAV_H}px - ${HEADER_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
         overflow: "hidden",
         background: "#e8b8b0",
       }}
@@ -629,5 +636,6 @@ export default function GeneratePage() {
         );
       })()}
     </div>
+    </>
   );
 }
