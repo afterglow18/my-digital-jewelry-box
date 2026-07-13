@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 
+// In the Replit web build VITE_API_BASE_URL is absent → relative URLs work fine.
+// In the Capacitor iOS build it is set to the deployed API URL → must be prefixed.
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -37,7 +41,7 @@ export function useAuth() {
 
     setAuthTokenGetter(() => token);
 
-    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.ok ? r.json() : Promise.reject(r.status))
       .then(({ user }) => setState({ status: "authenticated", user, token }))
       .catch(() => {
@@ -49,7 +53,7 @@ export function useAuth() {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const r = await fetch("/api/auth/login", {
+    const r = await fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -62,7 +66,7 @@ export function useAuth() {
   }, []);
 
   const register = useCallback(async (email: string, password: string) => {
-    const r = await fetch("/api/auth/register", {
+    const r = await fetch(`${API_BASE}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),

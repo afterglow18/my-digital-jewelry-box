@@ -138,7 +138,8 @@ export default function AuthPage({ onAuthenticated }: { onAuthenticated: () => v
     setError("");
     setLoading(true);
     try {
-      await fetch("/api/auth/forgot-password", {
+      const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
+      await fetch(`${API_BASE}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -160,7 +161,8 @@ export default function AuthPage({ onAuthenticated }: { onAuthenticated: () => v
     }
     setLoading(true);
     try {
-      const r = await fetch("/api/auth/reset-password", {
+      const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
+      const r = await fetch(`${API_BASE}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: resetToken, password: newPassword }),
