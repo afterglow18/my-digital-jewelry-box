@@ -99,10 +99,10 @@ export function UpgradeSheet({ onClose }: Props) {
           height: 64,
           backgroundColor: "#F5B8C8",
           backgroundImage: [
-            // horizontal black stripes with white hairline — matches app icon plaid
-            "repeating-linear-gradient(0deg, transparent 0px, transparent 20px, rgba(20,8,12,0.72) 20px, rgba(20,8,12,0.72) 30px, rgba(255,255,255,0.50) 30px, rgba(255,255,255,0.50) 32px, rgba(20,8,12,0.72) 32px, rgba(20,8,12,0.72) 42px, transparent 42px, transparent 62px)",
-            // vertical black stripes with white hairline
-            "repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(20,8,12,0.72) 20px, rgba(20,8,12,0.72) 30px, rgba(255,255,255,0.50) 30px, rgba(255,255,255,0.50) 32px, rgba(20,8,12,0.72) 32px, rgba(20,8,12,0.72) 42px, transparent 42px, transparent 62px)",
+            // horizontal stripes — warm charcoal, softer opacity like app icon plaid
+            "repeating-linear-gradient(0deg, transparent 0px, transparent 20px, rgba(60,30,40,0.38) 20px, rgba(60,30,40,0.38) 30px, rgba(255,255,255,0.55) 30px, rgba(255,255,255,0.55) 32px, rgba(60,30,40,0.38) 32px, rgba(60,30,40,0.38) 42px, transparent 42px, transparent 62px)",
+            // vertical stripes
+            "repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(60,30,40,0.38) 20px, rgba(60,30,40,0.38) 30px, rgba(255,255,255,0.55) 30px, rgba(255,255,255,0.55) 32px, rgba(60,30,40,0.38) 32px, rgba(60,30,40,0.38) 42px, transparent 42px, transparent 62px)",
           ].join(", "),
         }}
       >
