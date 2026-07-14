@@ -80,10 +80,10 @@
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 9%;
   
-  --primary: 348 44% 42%; /* Deep muted rose #783C46 */
+  --primary: 344 40% 62%; /* Medium rose #C47A8A */
   --primary-foreground: 0 0% 100%;
   
-  --secondary: 348 35% 47%; /* Mid rose #9A5060 */
+  --secondary: 344 35% 54%; /* Medium rose deep #A85E70 */
   --secondary-foreground: 0 0% 100%;
   
   --muted: 0 0% 90%;
