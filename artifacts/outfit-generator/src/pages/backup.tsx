@@ -266,14 +266,24 @@ export default function AccountPage() {
             <p className="text-sm text-black/60 leading-snug">
               Your vanity stays on your device, works offline, and can be backed up with iCloud.
             </p>
-            <a
-              href="https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-black/40 underline underline-offset-2 hover:text-black/60 transition-colors"
-            >
-              Privacy Policy
-            </a>
+            <div className="flex gap-4">
+              <a
+                href="https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-black/40 underline underline-offset-2 hover:text-black/60 transition-colors"
+              >
+                Privacy Policy
+              </a>
+              <a
+                href="https://app.notion.com/p/My-Digital-Collection-Support-39782db60653802a9088dcbae84c0527?source=copy_link"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-black/40 underline underline-offset-2 hover:text-black/60 transition-colors"
+              >
+                Support
+              </a>
+            </div>
           </div>
         </Card>
 
