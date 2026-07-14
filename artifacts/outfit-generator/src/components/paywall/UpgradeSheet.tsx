@@ -15,11 +15,11 @@ interface Props {
   onClose: () => void;
 }
 
-// ── Brand colours ────────────────────────────────────────────────────────────
-const ROSE       = "#C0145A";   // deep rose — primary accent
-const ROSE_DARK  = "#8C0040";   // shadow / stripe dark
-const ROSE_LIGHT = "#FDEEF5";   // selected card bg
-const ROSE_MID   = "#F2B8D4";   // selected card border / badge bg
+// ── Brand colours — sampled from the vanity room wall ───────────────────────
+const ROSE       = "#E8A898";   // warm salmon-rose (background wall)
+const ROSE_DARK  = "#C07060";   // deeper shadow variant
+const ROSE_LIGHT = "#FDF2EF";   // very light tint for selected card bg
+const ROSE_MID   = "#D4907C";   // mid tone for borders / badges
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const FEATURES = [
@@ -97,7 +97,7 @@ export function UpgradeSheet({ onClose }: Props) {
         className="relative flex items-center justify-center flex-shrink-0"
         style={{
           height: 64,
-          background: `repeating-linear-gradient(45deg, ${ROSE} 0px, ${ROSE} 18px, ${ROSE_DARK} 18px, ${ROSE_DARK} 36px)`,
+          background: `repeating-linear-gradient(45deg, ${ROSE} 0px, ${ROSE} 18px, ${ROSE_MID} 18px, ${ROSE_MID} 36px)`,
         }}
       >
         <span
@@ -220,7 +220,7 @@ export function UpgradeSheet({ onClose }: Props) {
           onClick={handlePurchase}
           disabled={status === "pending"}
           className="w-full py-4 rounded-xl font-black text-base uppercase tracking-wide
-                     text-white transition-all active:translate-y-0.5 active:shadow-none
+                     text-black transition-all active:translate-y-0.5 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
             background: status === "pending" ? ROSE_DARK : ROSE,
