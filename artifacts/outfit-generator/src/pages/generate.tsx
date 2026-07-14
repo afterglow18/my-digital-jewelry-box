@@ -22,7 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
-const PINK  = "#F5B8C8";
+const PINK  = "#9A5060";
 
 const LM = {
   doorL: 0.207,
@@ -212,7 +212,7 @@ export default function GeneratePage() {
         width: "100%",
         height: `min(calc(100dvh - ${NAV_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
         overflow: "hidden",
-        background: "#F5B8C8",
+        background: "#9A5060",
       }}
     >
       {/* Background image */}
@@ -388,9 +388,9 @@ export default function GeneratePage() {
                     onClick={handleSpin} disabled={!hasItems}
                     style={{
                       width: "100%", height: 52, borderRadius: 28,
-                      border: "2.5px solid #DFA0B5",
-                      background: hasItems ? "linear-gradient(to bottom, #F5B8C8, #DFA0B5)" : "rgba(244,167,186,0.32)",
-                      color: hasItems ? "#4A3A3A" : "#9a6070",
+                      border: "2.5px solid #783C46",
+                      background: hasItems ? "linear-gradient(to bottom, #9A5060, #783C46)" : "rgba(244,167,186,0.32)",
+                      color: hasItems ? "#fff" : "rgba(255,255,255,0.5)",
                       fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em",
                       textTransform: "uppercase", whiteSpace: "nowrap",
                       boxShadow: hasItems ? "3px 3px 0 rgba(0,0,0,0.85)" : "none",
@@ -433,8 +433,8 @@ export default function GeneratePage() {
                       onClick={handleRespin}
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
-                        height: 44, borderRadius: 24, border: "2.5px solid #DFA0B5",
-                        background: "linear-gradient(to bottom, #F5B8C8, #DFA0B5)",
+                        height: 44, borderRadius: 24, border: "2.5px solid #783C46",
+                        background: "linear-gradient(to bottom, #9A5060, #783C46)",
                         color: "#4A3A3A", fontFamily: "var(--font-display)",
                         fontWeight: 800, fontSize: 14, letterSpacing: "-0.01em",
                         textTransform: "uppercase", whiteSpace: "nowrap",
@@ -449,7 +449,7 @@ export default function GeneratePage() {
                       onClick={() => setIsSaveOpen(true)} disabled={!canSave}
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
-                        height: 44, borderRadius: 24, border: "2.5px solid #DFA0B5",
+                        height: 44, borderRadius: 24, border: "2.5px solid #783C46",
                         background: canSave ? "#fff" : "rgba(240,240,240,0.80)",
                         color: "#4A3A3A", fontFamily: "var(--font-display)",
                         fontWeight: 800, fontSize: 14, letterSpacing: "-0.01em",
@@ -497,8 +497,8 @@ export default function GeneratePage() {
                       onClick={handleSave} disabled={!saveName.trim() || saveOutfit.isPending}
                       style={{
                         padding: "0 14px", height: 36, borderRadius: 20, flexShrink: 0,
-                        background: "linear-gradient(to bottom, #F5B8C8, #DFA0B5)",
-                        color: "#4A3A3A", fontWeight: 700, fontSize: 13, border: "1.5px solid #DFA0B5",
+                        background: "linear-gradient(to bottom, #9A5060, #783C46)",
+                        color: "#fff", fontWeight: 700, fontSize: 13, border: "1.5px solid #783C46",
                         boxShadow: "0 3px 10px rgba(220,100,130,0.30)",
                         opacity: (!saveName.trim() || saveOutfit.isPending) ? 0.42 : 1,
                         cursor: "pointer",

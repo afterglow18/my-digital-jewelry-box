@@ -80,11 +80,11 @@
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 9%;
   
-  --primary: 343 68% 85%; /* Icon pink #F5B8C8 */
-  --primary-foreground: 0 13% 18%;
+  --primary: 348 44% 42%; /* Deep muted rose #783C46 */
+  --primary-foreground: 0 0% 100%;
   
-  --secondary: 340 52% 75%; /* Icon pink deep #DFA0B5 */
-  --secondary-foreground: 0 0% 9%;
+  --secondary: 348 35% 47%; /* Mid rose #9A5060 */
+  --secondary-foreground: 0 0% 100%;
   
   --muted: 0 0% 90%;
   --muted-foreground: 0 0% 40%;
