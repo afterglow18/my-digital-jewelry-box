@@ -1,20 +1,6 @@
 /**
  * WardrobePage — vanity-bg.png (1024×1536 PNG)
- *
- * Layout: 4 shelf sections inside a Hollywood-mirror frame.
- * Items sit ON TOP of each shelf surface (bottom-anchored within each section).
- * Baked-in pink "ADD X" pills show through the background when shelves are empty;
- * a React-rendered transparent tap zone handles the click.
- * When items are present, the carousel fills the section and covers the pill.
- *
- * Sections (y-fractions of image height):
- *   Section 1 (TOPS):        0.19 → 0.39
- *   Section 2 (BOTTOMS):     0.39 → 0.55
- *   Section 3 (SHOES):       0.55 → 0.71
- *   Section 4 (ACCESSORIES): 0.71 → 0.85
- *
- * No rod-overlay technique needed — shelf surfaces are already below items.
- * Save outfit: floating pill button at the top of the mirror.
+ * Local-first: data comes from IndexedDB via useListClothing / useSaveOutfit.
  */
 
 import React, {
@@ -24,10 +10,11 @@ import React, {
 import { useLocation } from "wouter";
 import {
   useListClothing, getListClothingQueryKey,
-  useListOutfits, getListOutfitsQueryKey,
-  useSaveOutfit,
-  ClothingItem,
-} from "@workspace/api-client-react";
+} from "@/hooks/useLocalWardrobe";
+import {
+  useListOutfits, useSaveOutfit, getListOutfitsQueryKey,
+} from "@/hooks/useLocalOutfits";
+import type { ClothingItem } from "@/types/local";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
@@ -36,7 +23,7 @@ import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 import { UpgradeSheet, UpgradeReason } from "@/components/paywall/UpgradeSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import { FREE_ITEM_LIMIT } from "@/lib/entitlements";
+import { FREE_ITEM_LIMIT } from "@/types/local";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type RowKey   = "makeup" | "skincare" | "hair" | "fragrances";
@@ -54,23 +41,15 @@ const IMG_W = 1024;
 const IMG_H = 1536;
 const NAV_H = 90;
 
-// ── Landmark fractions (measured from the 1024×1536 vanity PNG) ──────────────
-// Pixel-scanned from the new no-shelf background (6AC7C7ED…png).
-// doorL/doorR: inner mirror glass edges at mid-height (x=212, x=820 / 1024)
-// rows[i].btnCY:     y-centre of the baked-in pink ADD pill
-// rows[i].sectionTop: one pixel below the pill bottom — where items begin
-// rows[i].shelfY:     top of the NEXT pill — where items end
 const LM = {
-  doorL: 0.207,  // x≈212/1024 — left inner mirror glass edge
-  doorR: 0.801,  // x≈820/1024 — right inner mirror glass edge
-
+  doorL: 0.207,
+  doorR: 0.801,
   rows: [
-    { sectionTop: 0.241, shelfY: 0.344, btnCY: 0.220 },  // MAKEUP
-    { sectionTop: 0.390, shelfY: 0.502, btnCY: 0.367 },  // SKINCARE
-    { sectionTop: 0.547, shelfY: 0.663, btnCY: 0.525 },  // HAIR
-    { sectionTop: 0.702, shelfY: 0.805, btnCY: 0.683 },  // FRAGRANCES
+    { sectionTop: 0.241, shelfY: 0.344, btnCY: 0.220 },
+    { sectionTop: 0.390, shelfY: 0.502, btnCY: 0.367 },
+    { sectionTop: 0.547, shelfY: 0.663, btnCY: 0.525 },
+    { sectionTop: 0.702, shelfY: 0.805, btnCY: 0.683 },
   ],
-
   saveAreaY: 0.84,
 } as const;
 
@@ -104,7 +83,6 @@ function useImageRect(containerRef: RefObject<HTMLDivElement>): ImgRect {
   return rect;
 }
 
-// ── Pixel helpers ─────────────────────────────────────────────────────────────
 const pH = (ir: ImgRect, f: number) => ir.height * f;
 const pW = (ir: ImgRect, f: number) => ir.width  * f;
 const pX = (ir: ImgRect, f: number) => ir.left   + ir.width  * f;
@@ -140,7 +118,6 @@ export default function WardrobePage() {
 
   const rowData: Record<RowKey, ClothingItem[]> = { makeup, skincare, hair, fragrances };
   const totalItems = makeup.length + skincare.length + hair.length + fragrances.length;
-
 
   const queryClient = useQueryClient();
   const { tier, canAddItem } = useEntitlements();
@@ -200,9 +177,6 @@ export default function WardrobePage() {
   const itemsLeft = isFree ? Math.max(0, FREE_ITEM_LIMIT - totalItems) : null;
   const ready     = ir.width > 0;
 
-  // ── Section layout helpers ────────────────────────────────────────────────
-  // Each row gets its own height ceiling so rows don't all shrink to the
-  // size of the smallest section.
   const sectionHeights = ready
     ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
     : LM.rows.map(() => 0);
@@ -215,11 +189,10 @@ export default function WardrobePage() {
         width: "100%",
         height: `min(calc(100dvh - ${NAV_H}px), calc(100vw * ${(IMG_H / IMG_W).toFixed(6)}))`,
         overflow: "hidden",
-        // Dusty rose background matches the outer wall colour in the vanity image
         background: "#e8b8b0",
       }}
     >
-      {/* ── Background image ── */}
+      {/* Background image */}
       <img
         src="/vanity-bg.png?v=11"
         alt="My Digital Vanity"
@@ -238,7 +211,7 @@ export default function WardrobePage() {
 
       {ready && (
         <>
-          {/* ── Item-count badge (free tier) ── */}
+          {/* Item-count badge (free tier) */}
           {itemsLeft !== null && (
             <button
               onClick={() => setUpgradeReason("items")}
@@ -265,67 +238,46 @@ export default function WardrobePage() {
             </button>
           )}
 
-          {/* ── 4 shelf rows ── */}
+          {/* 4 shelf rows */}
           {ROWS.map(({ key, btnLabel }, rowIdx) => {
             const lm      = LM.rows[rowIdx];
             const items   = rowData[key];
-
             const secTop  = pY(ir, lm.sectionTop);
             const secH    = pH(ir, lm.shelfY - lm.sectionTop);
             const carLeft = pX(ir, LM.doorL);
             const carW    = pW(ir, LM.doorR - LM.doorL);
-
-            // ADD button: centered in the section at btnCY
             const btnCY   = pY(ir, lm.btnCY);
             const btnH    = Math.max(32, pH(ir, 0.045));
-
-            const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
+            const labelY  = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
 
             return (
               <React.Fragment key={key}>
-
-                {/* ── Category label (tappable → add photo) ── */}
+                {/* Category label */}
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
                   style={{
-                    position: "absolute",
-                    top: labelY,
-                    left: carLeft,
-                    width: carW,
-                    transform: "translateY(-50%)",
-                    zIndex: 23,
-                    textAlign: "center",
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    padding: 0,
+                    position: "absolute", top: labelY, left: carLeft, width: carW,
+                    transform: "translateY(-50%)", zIndex: 23,
+                    textAlign: "center", background: "none", border: "none", cursor: "pointer", padding: 0,
                   }}
                 >
                   <span style={{
-                    fontSize: Math.max(9, pH(ir, 0.013)),
-                    fontWeight: 800,
-                    letterSpacing: "0.12em",
-                    color: "rgba(120,60,70,0.75)",
-                    fontFamily: "var(--font-display)",
-                    textTransform: "uppercase",
+                    fontSize: Math.max(9, pH(ir, 0.013)), fontWeight: 800,
+                    letterSpacing: "0.12em", color: "rgba(120,60,70,0.75)",
+                    fontFamily: "var(--font-display)", textTransform: "uppercase",
                   }}>
                     {btnLabel}
                   </span>
                 </button>
 
-                {/* ── Item carousel — fills the section between buttons ── */}
+                {/* Item carousel */}
                 {items.length > 0 && (
                   <div
                     data-testid={`row-${key}`}
                     style={{
-                      position: "absolute",
-                      top:    secTop,
-                      left:   carLeft,
-                      width:  carW,
-                      height: secH,
-                      zIndex: 10,
-                      overflow: "visible",
+                      position: "absolute", top: secTop, left: carLeft,
+                      width: carW, height: secH, zIndex: 10, overflow: "visible",
                     }}
                   >
                     <ClosetRow
@@ -338,11 +290,7 @@ export default function WardrobePage() {
                   </div>
                 )}
 
-                {/* ── ADD button ──────────────────────────────────────────
-                    Always a transparent tap zone sitting exactly over the
-                    baked-in pink pill in the background image (at btnCY).
-                    The carousel lives BELOW the pill (sectionTop > btnCY),
-                    so this zone is never obscured by items.               */}
+                {/* ADD tap zone */}
                 <button
                   onClick={addHandlers[key]}
                   aria-label={btnLabel}
@@ -350,57 +298,38 @@ export default function WardrobePage() {
                   style={{
                     position: "absolute",
                     top:    btnCY - btnH / 2,
-                    left:   carLeft,
-                    width:  carW,
-                    height: btnH,
-                    zIndex: 22,
-                    background: "transparent",
-                    border: "none",
-                    cursor: "pointer",
+                    left:   carLeft, width: carW, height: btnH,
+                    zIndex: 22, background: "transparent", border: "none", cursor: "pointer",
                   }}
                 />
-
               </React.Fragment>
             );
           })}
 
-
-          {/* ── Person icon tap zone ── */}
+          {/* Person icon → favorites */}
           <button
             onClick={() => navigate("/favorites")}
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
-              position: "absolute",
-              top:    pY(ir, 0.905),
-              left:   pX(ir, 0.140),
-              width:  pW(ir, 0.110),
-              height: pH(ir, 0.065),
-              zIndex: 25,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
+              position: "absolute", top: pY(ir, 0.905), left: pX(ir, 0.140),
+              width: pW(ir, 0.110), height: pH(ir, 0.065),
+              zIndex: 25, background: "transparent", border: "none", cursor: "pointer",
             }}
           />
 
-          {/* ── Lipstick icon tap zone — opens premium upgrade sheet ── */}
+          {/* Lipstick icon → upgrade */}
           <button
             onClick={() => setUpgradeReason("items")}
             aria-label="Upgrade to premium"
             style={{
-              position: "absolute",
-              top:    pY(ir, 0.905),
-              left:   pX(ir, 0.755),
-              width:  pW(ir, 0.110),
-              height: pH(ir, 0.065),
-              zIndex: 25,
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
+              position: "absolute", top: pY(ir, 0.905), left: pX(ir, 0.755),
+              width: pW(ir, 0.110), height: pH(ir, 0.065),
+              zIndex: 25, background: "transparent", border: "none", cursor: "pointer",
             }}
           />
 
-          {/* ── SAVE circular button — covers the baked-in circle ── */}
+          {/* SAVE button */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
             aria-label="Save current look"
@@ -408,21 +337,15 @@ export default function WardrobePage() {
               position: "absolute",
               top:    pY(ir, 0.9466) - pW(ir, 0.0625),
               left:   pX(ir, 0.491)  - pW(ir, 0.0625),
-              width:  pW(ir, 0.125),
-              height: pW(ir, 0.125),
-              borderRadius: "50%",
-              zIndex: 26,
+              width:  pW(ir, 0.125), height: pW(ir, 0.125),
+              borderRadius: "50%", zIndex: 26,
               background: "linear-gradient(160deg, #F4D6DD 0%, #D9A7B3 100%)",
               border: "2px solid #D9A7B3",
               boxShadow: "0 2px 8px rgba(180,100,120,0.25)",
               cursor: "pointer",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0,
-              lineHeight: 1.15,
-              padding: 0,
+              display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              gap: 0, lineHeight: 1.15, padding: 0,
             }}
           >
             <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#000", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
@@ -431,7 +354,7 @@ export default function WardrobePage() {
         </>
       )}
 
-      {/* ── Save modal ── */}
+      {/* Save modal */}
       <AnimatePresence>
         {isSaveOpen && (
           <motion.div
@@ -513,7 +436,7 @@ export default function WardrobePage() {
         )}
       </AnimatePresence>
 
-      {/* ── Modals ── */}
+      {/* Modals */}
       <AnimatePresence>
         {upgradeReason && (
           <UpgradeSheet reason={upgradeReason} onClose={() => setUpgradeReason(null)} />

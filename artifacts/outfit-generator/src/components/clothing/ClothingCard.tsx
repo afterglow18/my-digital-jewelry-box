@@ -1,5 +1,5 @@
 import React from "react";
-import { ClothingItem } from "@workspace/api-client-react";
+import type { ClothingItem } from "@/types/local";
 import { getImageUrl } from "@/lib/utils";
 
 interface ClothingCardProps {
@@ -9,15 +9,15 @@ interface ClothingCardProps {
 
 export function ClothingCard({ item, onClick }: ClothingCardProps) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className="card-brutalist relative overflow-hidden group text-left w-full hover:-translate-y-1 hover:shadow-lg focus:translate-y-0 focus:shadow-md"
     >
       <div className="aspect-[3/4] bg-muted w-full relative">
         {item.imageObjectPath ? (
-          <img 
-            src={getImageUrl(item.imageObjectPath)!} 
-            alt={item.name} 
+          <img
+            src={getImageUrl(item.imageObjectPath)!}
+            alt={item.name}
             className="w-full h-full object-cover"
           />
         ) : (

@@ -5,9 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function getImageUrl(path: string | null | undefined) {
+/**
+ * Resolve an image path to a displayable URL.
+ *
+ * Local-first storage always uses data URLs directly, so this is
+ * effectively an identity function for data URLs. Null/undefined → null.
+ */
+export function getImageUrl(path: string | null | undefined): string | null {
   if (!path) return null;
-  // Data URLs are stored directly — return as-is
-  if (path.startsWith("data:")) return path;
-  return `/api/storage${path}`;
+  return path; // Data URLs are already display-ready
 }

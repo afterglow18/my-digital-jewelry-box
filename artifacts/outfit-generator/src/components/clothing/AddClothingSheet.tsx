@@ -1,7 +1,7 @@
 import React from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { ClothingForm, ClothingFormData } from "./ClothingForm";
-import { useCreateClothingItem, getListClothingQueryKey } from "@workspace/api-client-react";
+import { useCreateClothingItem, getListClothingQueryKey } from "@/hooks/useLocalWardrobe";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface AddClothingSheetProps {
@@ -27,7 +27,7 @@ export function AddClothingSheet({ open, onOpenChange, defaultCategory }: AddClo
   };
 
   const title = defaultCategory
-    ? `Add ${defaultCategory.charAt(0).toUpperCase() + defaultCategory.slice(1, -1)}`
+    ? `Add ${defaultCategory.charAt(0).toUpperCase() + defaultCategory.slice(1)}`
     : "New Item";
 
   return (

@@ -1,12 +1,6 @@
 /**
  * GeneratePage — "Spin It" screen for My Digital Vanity.
- *
- * Uses generate-bg.png (same 1024×1536 dimensions) with the 4-shelf layout.
- * Phase machine:
- *   idle     → shelves display items; "✨ Spin It!" button at bottom
- *   spinning → carousels cycle randomly while API is in flight
- *   result   → carousels landed on AI pick; "As If!" + "Save It ♡" buttons
- *   (save input inline, same pattern as wardrobe)
+ * Local-first: data comes from IndexedDB via useListClothing / useSaveOutfit.
  */
 
 import React, {
@@ -14,9 +8,11 @@ import React, {
 } from "react";
 import {
   useListClothing, getListClothingQueryKey,
+} from "@/hooks/useLocalWardrobe";
+import {
   useSaveOutfit, getListOutfitsQueryKey,
-  ClothingItem,
-} from "@workspace/api-client-react";
+} from "@/hooks/useLocalOutfits";
+import type { ClothingItem } from "@/types/local";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
@@ -32,19 +28,17 @@ const LM = {
   doorL: 0.207,
   doorR: 0.801,
   rows: [
-    { sectionTop: 0.241, shelfY: 0.344, btnCY: 0.220 },  // MAKEUP
-    { sectionTop: 0.390, shelfY: 0.502, btnCY: 0.367 },  // SKINCARE
-    { sectionTop: 0.547, shelfY: 0.663, btnCY: 0.525 },  // HAIR
-    { sectionTop: 0.702, shelfY: 0.805, btnCY: 0.683 },  // FRAGRANCES
+    { sectionTop: 0.241, shelfY: 0.344, btnCY: 0.220 },
+    { sectionTop: 0.390, shelfY: 0.502, btnCY: 0.367 },
+    { sectionTop: 0.547, shelfY: 0.663, btnCY: 0.525 },
+    { sectionTop: 0.702, shelfY: 0.805, btnCY: 0.683 },
   ],
-  // Action bar: from just below FRAGRANCES through the full bottom
   barY:   0.848,
   barBot: 1.000,
 } as const;
 
 interface ImgRect {
-  top: number; left: number; width: number; height: number;
-  containerH: number;
+  top: number; left: number; width: number; height: number; containerH: number;
 }
 
 function useImageRect(ref: RefObject<HTMLDivElement>): ImgRect {
@@ -55,8 +49,6 @@ function useImageRect(ref: RefObject<HTMLDivElement>): ImgRect {
       if (!c) return;
       const cW = c.clientWidth, cH = c.clientHeight;
       const iR = IMG_W / IMG_H;
-      const cR = cW / cH;
-      // Always fill the full width — container clips any excess height.
       const rW = cW, rH = cW / iR, rL = 0, rT = 0;
       setRect({ top: rT, left: rL, width: rW, height: rH, containerH: cH });
     };
@@ -72,7 +64,6 @@ const pW = (ir: ImgRect, f: number) => ir.width  * f;
 const pX = (ir: ImgRect, f: number) => ir.left   + ir.width  * f;
 const pY = (ir: ImgRect, f: number) => ir.top    + ir.height * f;
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 type RowKey = "makeup" | "skincare" | "hair" | "fragrances";
 type Phase  = "idle" | "spinning" | "result";
 
@@ -85,7 +76,6 @@ const ROWS: { key: RowKey }[] = [
 
 const MIN_SPIN_MS = 1600;
 
-// ── Page ──────────────────────────────────────────────────────────────────────
 export default function GeneratePage() {
   const containerRef = useRef<HTMLDivElement>(null!);
   const ir    = useImageRect(containerRef);
@@ -123,10 +113,9 @@ export default function GeneratePage() {
     fragrances: useCallback((item: ClothingItem | null) => setCentred(p => ({ ...p, fragrances: item ?? undefined })), []),
   };
 
-  const saveOutfit     = useSaveOutfit();
-  const queryClient    = useQueryClient();
+  const saveOutfit  = useSaveOutfit();
+  const queryClient = useQueryClient();
 
-  // ── Spin ──────────────────────────────────────────────────────────────────
   const spinningRef = useRef(false);
 
   const startSpin = useCallback(() => {
@@ -146,17 +135,13 @@ export default function GeneratePage() {
         if (stop[key]) return;
         const items = rowDataRef.current[key];
         if (items.length > 1) {
-          rowRefs[key].current?.scrollToIndex(
-            Math.floor(Math.random() * items.length),
-            false,
-          );
+          rowRefs[key].current?.scrollToIndex(Math.floor(Math.random() * items.length), false);
         }
         setTimeout(cycle, INTERVAL);
       };
       cycle();
     });
 
-    // Pick a random item from each category locally — no AI call needed.
     const landMap: Partial<Record<RowKey, { item: ClothingItem; idx: number }>> = {};
     ROWS.forEach(({ key }) => {
       const arr = rowDataRef.current[key];
@@ -215,12 +200,10 @@ export default function GeneratePage() {
 
   const canSave = Object.keys(centred).length > 0;
 
-  // ── Section layout helpers — per-row, same as wardrobe.tsx ──────────────
   const sectionHeights = ready
     ? LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))
     : LM.rows.map(() => 0);
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div
       ref={containerRef}
@@ -232,7 +215,7 @@ export default function GeneratePage() {
         background: "#e8b8b0",
       }}
     >
-      {/* ── Background image ── */}
+      {/* Background image */}
       <img
         src="/generate-bg.png?v=2"
         alt="My Digital Vanity"
@@ -249,28 +232,20 @@ export default function GeneratePage() {
         }}
       />
 
-      {/* ── "Matchmaker" subtitle under the bg title ── */}
+      {/* "Matchmaker" subtitle */}
       {ready && (
         <div
           style={{
             position: "absolute",
-            top:  pY(ir, 0.158),
-            left: pX(ir, 0.237),
-            width: pW(ir, 0.564),
-            textAlign: "center",
-            zIndex: 1,
-            pointerEvents: "none",
-            userSelect: "none",
+            top:  pY(ir, 0.158), left: pX(ir, 0.237), width: pW(ir, 0.564),
+            textAlign: "center", zIndex: 1, pointerEvents: "none", userSelect: "none",
           }}
         >
           <span style={{
-            fontFamily: "inherit",
-            fontWeight: 700,
+            fontFamily: "inherit", fontWeight: 700,
             fontSize: Math.max(14, pW(ir, 0.055)),
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#4a1e28",
-            opacity: 0.85,
+            letterSpacing: "0.18em", textTransform: "uppercase",
+            color: "#4a1e28", opacity: 0.85,
           }}>
             Matchmaker
           </span>
@@ -283,52 +258,33 @@ export default function GeneratePage() {
 
         return (
           <>
-            {/* ── 4 shelf carousels + ADD-button covers ── */}
+            {/* Shelf carousels */}
             {ROWS.map(({ key }, rowIdx) => {
               const lm    = LM.rows[rowIdx];
               const items = { makeup, skincare, hair, fragrances }[key];
               const secTop = pY(ir, lm.sectionTop);
               const secH   = pH(ir, lm.shelfY - lm.sectionTop);
-              const btnCY  = pY(ir, lm.btnCY);
-              const btnH   = Math.max(32, pH(ir, 0.045));
-
-              const label = key === "fragrances" ? "FRAGRANCES" : key === "hair" ? "HAIRCARE" : key.toUpperCase();
+              const label  = key === "fragrances" ? "FRAGRANCES" : key === "hair" ? "HAIRCARE" : key.toUpperCase();
               const labelY = pY(ir, lm.btnCY + (lm.sectionTop - lm.btnCY) * 0.08);
 
               return (
                 <React.Fragment key={key}>
-
-                  {/* ── Category label ── */}
                   <div style={{
-                    position: "absolute",
-                    top: labelY,
-                    left: carLeft,
-                    width: carW,
-                    transform: "translateY(-50%)",
-                    zIndex: 12,
-                    textAlign: "center",
-                    pointerEvents: "none",
+                    position: "absolute", top: labelY, left: carLeft, width: carW,
+                    transform: "translateY(-50%)", zIndex: 12, textAlign: "center", pointerEvents: "none",
                   }}>
                     <span style={{
-                      fontSize: Math.max(9, pH(ir, 0.013)),
-                      fontWeight: 800,
-                      letterSpacing: "0.12em",
-                      color: "rgba(120,60,70,0.75)",
-                      fontFamily: "var(--font-display)",
-                      textTransform: "uppercase",
-                    }}>
-                      {label}
-                    </span>
+                      fontSize: Math.max(9, pH(ir, 0.013)), fontWeight: 800,
+                      letterSpacing: "0.12em", color: "rgba(120,60,70,0.75)",
+                      fontFamily: "var(--font-display)", textTransform: "uppercase",
+                    }}>{label}</span>
                   </div>
 
                   {items.length > 0 ? (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: secTop, left: carLeft, width: carW, height: secH,
-                        zIndex: 10, overflow: "visible",
-                      }}
-                    >
+                    <div style={{
+                      position: "absolute", top: secTop, left: carLeft, width: carW, height: secH,
+                      zIndex: 10, overflow: "visible",
+                    }}>
                       <ClosetRow
                         ref={rowRefs[key]}
                         items={items}
@@ -339,247 +295,167 @@ export default function GeneratePage() {
                     </div>
                   ) : (
                     <div style={{
-                      position: "absolute",
-                      top: secTop, left: carLeft, width: carW, height: secH,
-                      zIndex: 10,
-                      display: "flex", alignItems: "center", justifyContent: "center",
+                      position: "absolute", top: secTop, left: carLeft, width: carW, height: secH,
+                      zIndex: 10, display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
                       <span style={{
                         fontSize: 10, fontWeight: 700,
                         letterSpacing: "0.09em", textTransform: "uppercase",
                         color: "rgba(180,100,110,0.40)",
-                      }}>
-                        No items
-                      </span>
+                      }}>No items</span>
                     </div>
                   )}
                 </React.Fragment>
               );
             })}
 
-            {/* ── Spinning sparkle overlay ── */}
+            {/* Spinning overlay */}
             <AnimatePresence>
               {phase === "spinning" && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                   style={{
-                    position: "absolute",
-                    top: "46%", left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    zIndex: 25,
-                    pointerEvents: "none",
-                    display: "flex", flexDirection: "column",
-                    alignItems: "center", gap: 8,
+                    position: "absolute", top: "46%", left: "50%",
+                    transform: "translate(-50%, -50%)", zIndex: 25, pointerEvents: "none",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
                   }}
                 >
                   <motion.span
                     animate={{ scale: [1, 1.18, 1], rotate: [0, 12, -12, 0] }}
                     transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
                     style={{ fontSize: 26, lineHeight: 1, display: "block" }}
-                  >
-                    ✨
-                  </motion.span>
+                  >✨</motion.span>
                   <span style={{
-                    fontSize: 10, fontWeight: 800,
-                    letterSpacing: "0.13em", textTransform: "uppercase",
-                    color: "#7a3040",
-                    background: "rgba(255,235,240,0.90)",
-                    padding: "3px 11px", borderRadius: 20,
-                    whiteSpace: "nowrap",
-                  }}>
-                    Building your look…
-                  </span>
+                    fontSize: 10, fontWeight: 800, letterSpacing: "0.13em",
+                    textTransform: "uppercase", color: "#7a3040",
+                    background: "rgba(255,235,240,0.90)", padding: "3px 11px",
+                    borderRadius: 20, whiteSpace: "nowrap",
+                  }}>Building your look…</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* ── Empty vanity prompt ── */}
+            {/* Empty vanity prompt */}
             {!hasItems && (
               <div style={{
-                position: "absolute",
-                top: "46%", left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 30,
-                textAlign: "center",
-                padding: "14px 22px",
-                borderRadius: 16,
-                background: "rgba(255,240,245,0.92)",
+                position: "absolute", top: "46%", left: "50%",
+                transform: "translate(-50%, -50%)", zIndex: 30,
+                textAlign: "center", padding: "14px 22px",
+                borderRadius: 16, background: "rgba(255,240,245,0.92)",
                 border: "1.5px solid rgba(220,150,160,0.40)",
-                boxShadow: "0 4px 18px rgba(0,0,0,0.11)",
-                maxWidth: pW(ir, 0.65),
+                boxShadow: "0 4px 18px rgba(0,0,0,0.11)", maxWidth: pW(ir, 0.65),
               }}>
                 <p style={{
-                  fontWeight: 800, fontSize: 12,
-                  letterSpacing: "0.07em", textTransform: "uppercase",
-                  color: "#7a3040", fontFamily: "var(--font-display)", margin: 0,
-                }}>
-                  Your vanity is empty
-                </p>
-                <p style={{
-                  fontSize: 11, color: "#9a5060",
-                  marginTop: 5, lineHeight: 1.5,
-                }}>
+                  fontWeight: 800, fontSize: 12, letterSpacing: "0.07em",
+                  textTransform: "uppercase", color: "#7a3040",
+                  fontFamily: "var(--font-display)", margin: 0,
+                }}>Your vanity is empty</p>
+                <p style={{ fontSize: 11, color: "#9a5060", marginTop: 5, lineHeight: 1.5 }}>
                   Add makeup, skincare, hair or fragrances in the Vanity tab first.
                 </p>
               </div>
             )}
 
+            {/* Action bar background */}
+            <div aria-hidden="true" style={{
+              position: "absolute", top: pY(ir, LM.barY), left: 0, width: "100%",
+              height: pH(ir, LM.barBot - LM.barY), zIndex: 18, pointerEvents: "none",
+              background: "rgba(255,248,250,0.96)", borderTop: "1px solid rgba(220,150,160,0.25)",
+            }} />
 
-            {/* ── Action bar — white panel behind buttons ── */}
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                top:    pY(ir, LM.barY),
-                left:   0,
-                width:  "100%",
-                height: pH(ir, LM.barBot - LM.barY),
-                zIndex: 18,
-                pointerEvents: "none",
-                background: "rgba(255,248,250,0.96)",
-                borderTop: "1px solid rgba(220,150,160,0.25)",
-              }}
-            />
-
-            {/* ── CTA buttons ── */}
-            <div
-              style={{
-                position: "absolute",
-                top:    pY(ir, LM.barY),
-                left:   pX(ir, LM.doorL),
-                width:  pW(ir, LM.doorR - LM.doorL),
-                height: pH(ir, LM.barBot - LM.barY),
-                zIndex: 22,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            {/* CTA buttons */}
+            <div style={{
+              position: "absolute",
+              top: pY(ir, LM.barY), left: pX(ir, LM.doorL),
+              width: pW(ir, LM.doorR - LM.doorL),
+              height: pH(ir, LM.barBot - LM.barY),
+              zIndex: 22, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
               <AnimatePresence mode="wait">
 
                 {/* IDLE: Spin It */}
                 {phase === "idle" && !isSaveOpen && (
                   <motion.button
                     key="spin-btn"
-                    initial={{ opacity: 0, scale: 0.88 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 360, damping: 26 }}
-                    onClick={handleSpin}
-                    disabled={!hasItems}
+                    onClick={handleSpin} disabled={!hasItems}
                     style={{
                       width: "100%", height: 52, borderRadius: 28,
                       border: "2.5px solid #D9A7B3",
-                      background: hasItems
-                        ? "linear-gradient(to bottom, #F4D6DD, #D9A7B3)"
-                        : "rgba(220,180,190,0.32)",
+                      background: hasItems ? "linear-gradient(to bottom, #F4D6DD, #D9A7B3)" : "rgba(220,180,190,0.32)",
                       color: hasItems ? "#4A3A3A" : "#9a6070",
-                      fontWeight: 800, fontSize: 16,
-                      letterSpacing: "-0.01em", textTransform: "uppercase",
-                      whiteSpace: "nowrap",
+                      fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em",
+                      textTransform: "uppercase", whiteSpace: "nowrap",
                       boxShadow: hasItems ? "3px 3px 0 rgba(0,0,0,0.85)" : "none",
                       cursor: hasItems ? "pointer" : "default",
                       fontFamily: "var(--font-display)",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
                     }}
-                  >
-                    ✨ Spin It!
-                  </motion.button>
+                  >✨ Spin It!</motion.button>
                 )}
 
-                {/* SPINNING: bouncing dots */}
+                {/* SPINNING: dots */}
                 {phase === "spinning" && (
                   <motion.div
-                    key="dots"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    key="dots" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                     style={{
-                      display: "flex", gap: 6,
-                      padding: "0 24px", height: 44,
-                      alignItems: "center", justifyContent: "center",
-                      borderRadius: 24,
-                      background: "rgba(255,235,240,0.85)",
-                      border: "1.5px solid rgba(220,150,160,0.28)",
+                      display: "flex", gap: 6, padding: "0 24px", height: 44,
+                      alignItems: "center", justifyContent: "center", borderRadius: 24,
+                      background: "rgba(255,235,240,0.85)", border: "1.5px solid rgba(220,150,160,0.28)",
                     }}
                   >
                     {[0, 1, 2].map(i => (
                       <motion.div
                         key={i}
                         animate={{ y: [0, -6, 0] }}
-                        transition={{
-                          repeat: Infinity, duration: 0.65,
-                          delay: i * 0.16, ease: "easeInOut",
-                        }}
-                        style={{
-                          width: 7, height: 7, borderRadius: "50%",
-                          background: PINK,
-                        }}
+                        transition={{ repeat: Infinity, duration: 0.65, delay: i * 0.16, ease: "easeInOut" }}
+                        style={{ width: 7, height: 7, borderRadius: "50%", background: PINK }}
                       />
                     ))}
                   </motion.div>
                 )}
 
-                {/* RESULT: As If! + Save It */}
+                {/* RESULT: Next + Save */}
                 {phase === "result" && !isSaveOpen && (
                   <motion.div
                     key="result-btns"
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    style={{
-                      display: "flex", gap: 10, justifyContent: "center",
-                      width: "100%",
-                    }}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                    style={{ display: "flex", gap: 10, justifyContent: "center", width: "100%" }}
                   >
                     <button
                       onClick={handleRespin}
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
-                        height: 44, borderRadius: 24,
-                        border: "2.5px solid #D9A7B3",
+                        height: 44, borderRadius: 24, border: "2.5px solid #D9A7B3",
                         background: "linear-gradient(to bottom, #F4D6DD, #D9A7B3)",
-                        color: "#4A3A3A",
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 800, fontSize: 14,
-                        letterSpacing: "-0.01em", textTransform: "uppercase",
-                        whiteSpace: "nowrap",
-                        boxShadow: "2px 2px 0 rgba(0,0,0,0.85)",
-                        cursor: "pointer",
+                        color: "#4A3A3A", fontFamily: "var(--font-display)",
+                        fontWeight: 800, fontSize: 14, letterSpacing: "-0.01em",
+                        textTransform: "uppercase", whiteSpace: "nowrap",
+                        boxShadow: "2px 2px 0 rgba(0,0,0,0.85)", cursor: "pointer",
                         display: "flex", flexDirection: "column",
-                        alignItems: "center", justifyContent: "center",
-                        gap: 2, padding: "0 12px",
+                        alignItems: "center", justifyContent: "center", gap: 2, padding: "0 12px",
                       }}
                     >
-                      <span>Next</span>
-                      <span style={{ fontSize: 14, lineHeight: 1 }}>✨</span>
+                      <span>Next</span><span style={{ fontSize: 14, lineHeight: 1 }}>✨</span>
                     </button>
-
                     <button
-                      onClick={() => setIsSaveOpen(true)}
-                      disabled={!canSave}
+                      onClick={() => setIsSaveOpen(true)} disabled={!canSave}
                       style={{
                         flexGrow: 1, flexShrink: 1, flexBasis: "0%", minWidth: 0,
-                        height: 44, borderRadius: 24,
-                        border: "2.5px solid #D9A7B3",
+                        height: 44, borderRadius: 24, border: "2.5px solid #D9A7B3",
                         background: canSave ? "#fff" : "rgba(240,240,240,0.80)",
-                        color: "#4A3A3A",
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 800, fontSize: 14,
-                        letterSpacing: "-0.01em", textTransform: "uppercase",
-                        whiteSpace: "nowrap",
+                        color: "#4A3A3A", fontFamily: "var(--font-display)",
+                        fontWeight: 800, fontSize: 14, letterSpacing: "-0.01em",
+                        textTransform: "uppercase", whiteSpace: "nowrap",
                         boxShadow: canSave ? "2px 2px 0 rgba(0,0,0,0.85)" : "none",
-                        cursor: canSave ? "pointer" : "default",
-                        opacity: canSave ? 1 : 0.5,
+                        cursor: canSave ? "pointer" : "default", opacity: canSave ? 1 : 0.5,
                         display: "flex", flexDirection: "column",
-                        alignItems: "center", justifyContent: "center",
-                        gap: 2, padding: "0 12px",
+                        alignItems: "center", justifyContent: "center", gap: 2, padding: "0 12px",
                       }}
                     >
-                      <span>Save It</span>
-                      <span style={{ fontSize: 14, lineHeight: 1 }}>♡</span>
+                      <span>Save It</span><span style={{ fontSize: 14, lineHeight: 1 }}>♡</span>
                     </button>
                   </motion.div>
                 )}
@@ -588,25 +464,19 @@ export default function GeneratePage() {
                 {isSaveOpen && (
                   <motion.div
                     key="save-input"
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 6 }}
+                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
                     style={{ display: "flex", gap: 6, width: "100%", padding: "0 8px" }}
                   >
                     <input
-                      autoFocus
-                      type="text"
-                      placeholder="Name this look…"
-                      value={saveName}
-                      onChange={e => setSaveName(e.target.value)}
+                      autoFocus type="text" placeholder="Name this look…"
+                      value={saveName} onChange={e => setSaveName(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && handleSave()}
                       style={{
                         flex: 1, height: 38, borderRadius: 20, padding: "0 14px",
                         fontSize: 13, fontWeight: 600, color: "#5a2030",
                         background: "rgba(255,252,248,0.98)",
                         border: "1.5px solid rgba(220,150,160,0.50)",
-                        boxShadow: "0 3px 12px rgba(0,0,0,0.13)",
-                        outline: "none",
+                        boxShadow: "0 3px 12px rgba(0,0,0,0.13)", outline: "none",
                       }}
                     />
                     <button
@@ -615,15 +485,11 @@ export default function GeneratePage() {
                         width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
                         background: "rgba(255,248,250,0.97)",
                         border: "1.5px solid rgba(220,150,160,0.36)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
                       }}
-                    >
-                      <X style={{ width: 14, height: 14, color: PINK }} />
-                    </button>
+                    ><X style={{ width: 14, height: 14, color: PINK }} /></button>
                     <button
-                      onClick={handleSave}
-                      disabled={!saveName.trim() || saveOutfit.isPending}
+                      onClick={handleSave} disabled={!saveName.trim() || saveOutfit.isPending}
                       style={{
                         padding: "0 14px", height: 36, borderRadius: 20, flexShrink: 0,
                         background: "linear-gradient(to bottom, #F4D6DD, #D9A7B3)",
@@ -632,9 +498,7 @@ export default function GeneratePage() {
                         opacity: (!saveName.trim() || saveOutfit.isPending) ? 0.42 : 1,
                         cursor: "pointer",
                       }}
-                    >
-                      {saveOutfit.isPending ? "…" : "Save ♡"}
-                    </button>
+                    >{saveOutfit.isPending ? "…" : "Save ♡"}</button>
                   </motion.div>
                 )}
 

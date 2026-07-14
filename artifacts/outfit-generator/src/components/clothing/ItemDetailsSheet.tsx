@@ -5,44 +5,28 @@
  */
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X, Heart, Trash2, Save, ChevronDown,
-} from "lucide-react";
-import {
-  ClothingItem,
-  ClothingItemUpdateCategory,
-  useUpdateClothingItem,
-  useDeleteClothingItem,
-  getListClothingQueryKey,
-  getListOutfitsQueryKey,
-} from "@workspace/api-client-react";
+import { X, Heart, Trash2, Save, ChevronDown } from "lucide-react";
+import type { ClothingItem, ClothingItemUpdateCategory } from "@/types/local";
+import { useUpdateClothingItem, useDeleteClothingItem, getListClothingQueryKey } from "@/hooks/useLocalWardrobe";
+import { getListOutfitsQueryKey } from "@/hooks/useLocalOutfits";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const SEASON_OPTIONS    = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
-const OCCASION_OPTIONS  = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
-const CATEGORY_OPTIONS  = ["makeup", "skincare", "hair", "fragrances"];
+const SEASON_OPTIONS   = ["", "Spring", "Summer", "Fall", "Winter", "All Season"];
+const OCCASION_OPTIONS = ["", "Casual", "Work", "Formal", "Sport", "Special Event"];
+const CATEGORY_OPTIONS = ["makeup", "skincare", "hair", "fragrances"];
 
 function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
+  label, value, onChange, placeholder, type = "text",
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder?: string; type?: string;
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-        {label}
-      </label>
+      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">{label}</label>
       <input
         type={type}
         value={value}
@@ -57,33 +41,22 @@ function Field({
 }
 
 function SelectField({
-  label,
-  value,
-  onChange,
-  options,
+  label, value, onChange, options,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
+  label: string; value: string; onChange: (v: string) => void; options: string[];
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-        {label}
-      </label>
+      <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">{label}</label>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className="w-full appearance-none border-2 border-black rounded-lg px-3 py-2 pr-8
-                     text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary
-                     cursor-pointer"
+                     text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
         >
           {options.map((o) => (
-            <option key={o} value={o}>
-              {o || `— ${label} —`}
-            </option>
+            <option key={o} value={o}>{o || `— ${label} —`}</option>
           ))}
         </select>
         <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-black/40" />
@@ -101,17 +74,9 @@ interface ItemDetailsSheetProps {
 }
 
 interface FormState {
-  name: string;
-  brand: string;
-  color: string;
-  size: string;
-  season: string;
-  occasion: string;
-  purchasePrice: string;
-  purchaseDate: string;
-  notes: string;
-  isFavorite: boolean;
-  category: string;
+  name: string; brand: string; color: string; size: string;
+  season: string; occasion: string; purchasePrice: string;
+  purchaseDate: string; notes: string; isFavorite: boolean; category: string;
 }
 
 function toForm(item: ClothingItem): FormState {
@@ -147,53 +112,48 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
 }
 
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]           = useState<FormState | null>(null);
+  const [form, setForm]                   = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
 
-  // Reset form whenever item changes
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
-  }, [item?.id]);
+  }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!item || !form) return null;
 
   const dirty = isDirty(form, item);
-
   const patch = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+  };
 
   const handleSave = () => {
     updateItem.mutate(
       {
         id: item.id,
         data: {
-          // Always send every editable field so the backend can clear it when empty.
-          // Backend converts "" → null in DB.
           name:          form.name.trim() || item.name,
-          brand:         form.brand.trim(),
-          color:         form.color.trim(),
-          size:          form.size.trim(),
-          season:        form.season,
-          occasion:      form.occasion,
-          purchasePrice: form.purchasePrice.trim(),
-          purchaseDate:  form.purchaseDate.trim(),
-          notes:         form.notes.trim(),
+          brand:         form.brand.trim() || null,
+          color:         form.color.trim() || null,
+          size:          form.size.trim() || null,
+          season:        form.season || null,
+          occasion:      form.occasion || null,
+          purchasePrice: form.purchasePrice.trim() || null,
+          purchaseDate:  form.purchaseDate.trim() || null,
+          notes:         form.notes.trim() || null,
           isFavorite:    form.isFavorite,
           category:      (form.category || item.category) as ClothingItemUpdateCategory,
         },
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-          onClose();
-        },
-      }
+      { onSuccess: () => { invalidate(); onClose(); } },
     );
   };
 
@@ -202,12 +162,11 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       { id: item.id },
       {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+          invalidate();
           onDeleted?.();
           onClose();
         },
-      }
+      },
     );
   };
 
@@ -219,33 +178,25 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       transition={{ type: "spring", damping: 28, stiffness: 240 }}
       className="fixed inset-0 z-[65] flex flex-col max-w-md mx-auto bg-[#f9f4ee] overflow-y-auto"
     >
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3
                       bg-white border-b-2 border-black flex-shrink-0">
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Item Details
-        </h2>
+        <h2 className="font-display font-bold text-xl uppercase tracking-tight">Item Details</h2>
         <div className="flex items-center gap-2">
-          {/* Favourite toggle — saves instantly */}
+          {/* Favourite toggle */}
           <button
             onClick={() => {
               const next = !form.isFavorite;
               patch("isFavorite")(next);
               updateItem.mutate(
                 { id: item.id, data: { isFavorite: next } },
-                {
-                  onSuccess: () => {
-                    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-                    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-                  },
-                }
+                { onSuccess: invalidate },
               );
             }}
             className={`w-9 h-9 border-2 border-black rounded-full flex items-center justify-center transition-all
                         ${form.isFavorite
                           ? "bg-red-500 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                           : "bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"}`}
-            title="Favourite"
           >
             <Heart
               className="w-4 h-4"
@@ -265,7 +216,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       </div>
 
-      {/* ── Photo ── */}
+      {/* Photo */}
       {item.imageObjectPath && (
         <div
           className="w-full h-52 flex-shrink-0 border-b-2 border-black"
@@ -282,43 +233,26 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       )}
 
-      {/* ── Form ── */}
+      {/* Form */}
       <div className="flex-1 px-4 py-5 flex flex-col gap-4">
-
-        {/* Name */}
-        <Field
-          label="Item Name"
-          value={form.name}
-          onChange={patch("name") as (v: string) => void}
-          placeholder="e.g. White Linen Shirt"
-        />
-
-        {/* Brand + Color */}
+        <Field label="Item Name" value={form.name} onChange={patch("name") as (v: string) => void}
+               placeholder="e.g. Charlotte Tilbury Flawless Filter" />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="Nike, Zara…" />
-          <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Navy Blue" />
+          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="e.g. NARS" />
+          <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Rose Gold" />
         </div>
-
-        {/* Size */}
-        <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void} placeholder="30ml, 50ml, Full Size…" />
-
-        {/* Season + Occasion */}
+        <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void}
+               placeholder="30ml, 50ml, Full Size…" />
         <div className="grid grid-cols-2 gap-3">
           <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
           <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />
         </div>
-
-        {/* Price + Date */}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Purchase Price" value={form.purchasePrice} onChange={patch("purchasePrice") as (v: string) => void} placeholder="$49.99" />
           <Field label="Purchase Date"  value={form.purchaseDate}  onChange={patch("purchaseDate") as (v: string) => void}  type="date" />
         </div>
-
-        {/* Notes */}
         <div className="flex flex-col gap-1">
-          <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">
-            Notes
-          </label>
+          <label className="text-[10px] font-bold uppercase tracking-widest text-black/40">Notes</label>
           <textarea
             value={form.notes}
             onChange={(e) => patch("notes")(e.target.value)}
@@ -329,15 +263,9 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                        placeholder:font-normal placeholder:text-black/25"
           />
         </div>
-
-        {/* Category (editable) + Times Worn (read-only) */}
         <div className="grid grid-cols-2 gap-3">
-          <SelectField
-            label="Category"
-            value={form.category}
-            onChange={patch("category") as (v: string) => void}
-            options={CATEGORY_OPTIONS}
-          />
+          <SelectField label="Category" value={form.category}
+                       onChange={patch("category") as (v: string) => void} options={CATEGORY_OPTIONS} />
           <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
             <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
             <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
@@ -345,13 +273,10 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* ── Footer actions ── */}
+      {/* Footer */}
       <div className="sticky bottom-0 px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2">
-
-        {/* Save (only when dirty) */}
         <AnimatePresence>
           {dirty && (
             <motion.button
@@ -368,7 +293,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           )}
         </AnimatePresence>
 
-        {/* Delete */}
         {!showDeleteConfirm ? (
           <button
             onClick={() => setShowDeleteConfirm(true)}
@@ -393,8 +317,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               onClick={handleDelete}
               disabled={deleteItem.isPending}
               className="flex-1 py-3 rounded-xl text-sm font-bold uppercase border-2 border-red-600
-                         bg-red-500 text-white
-                         shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
+                         bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
                          active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
                          disabled:opacity-50"
             >

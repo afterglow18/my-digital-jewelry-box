@@ -2,25 +2,24 @@ import React from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { ClothingForm, ClothingFormData } from "./ClothingForm";
 import { 
-  useGetClothingItem, 
   useUpdateClothingItem, 
   useDeleteClothingItem,
+  useListClothing,
   getListClothingQueryKey,
-  getGetClothingItemQueryKey
-} from "@workspace/api-client-react";
+} from "@/hooks/useLocalWardrobe";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 
 interface EditClothingSheetProps {
-  itemId: number | null;
+  itemId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function EditClothingSheet({ itemId, open, onOpenChange }: EditClothingSheetProps) {
-  const { data: item, isLoading } = useGetClothingItem(itemId!, {
-    query: { enabled: !!itemId && open, queryKey: getGetClothingItemQueryKey(itemId!) }
-  });
+  // Load all items and find the one we need (avoids a separate get-by-id query)
+  const { data: items, isLoading } = useListClothing({}, { query: { enabled: !!itemId && open } });
+  const item = items?.find(i => i.id === itemId) ?? null;
   
   const updateItem = useUpdateClothingItem();
   const deleteItem = useDeleteClothingItem();
@@ -30,11 +29,10 @@ export function EditClothingSheet({ itemId, open, onOpenChange }: EditClothingSh
     if (!itemId) return;
     
     updateItem.mutate(
-      { id: itemId, data: { ...data, imageObjectPath: data.imageObjectPath || undefined } },
+      { id: itemId, data: { ...data, imageObjectPath: data.imageObjectPath || null } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetClothingItemQueryKey(itemId) });
           onOpenChange(false);
         }
       }
@@ -43,7 +41,7 @@ export function EditClothingSheet({ itemId, open, onOpenChange }: EditClothingSh
 
   const handleDelete = () => {
     if (!itemId) return;
-    if (confirm("Like, are you sure you want to delete this?")) {
+    if (confirm("Are you sure you want to delete this item?")) {
       deleteItem.mutate({ id: itemId }, {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
@@ -54,7 +52,7 @@ export function EditClothingSheet({ itemId, open, onOpenChange }: EditClothingSh
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} title="Edit Fit">
+    <Sheet open={open} onOpenChange={onOpenChange} title="Edit Item">
       {isLoading ? (
         <div className="flex items-center justify-center p-12">
           <Loader2 className="w-8 h-8 animate-spin" />
@@ -64,7 +62,7 @@ export function EditClothingSheet({ itemId, open, onOpenChange }: EditClothingSh
           <ClothingForm 
             initialData={{
               name: item.name,
-              category: item.category as any,
+              category: item.category as ClothingFormData["category"],
               color: item.color || undefined,
               brand: item.brand || undefined,
               notes: item.notes || undefined,
@@ -81,7 +79,7 @@ export function EditClothingSheet({ itemId, open, onOpenChange }: EditClothingSh
             className="flex items-center justify-center gap-2 w-full py-4 text-destructive border-2 border-destructive font-bold uppercase tracking-widest active:bg-destructive active:text-white transition-colors"
           >
             <Trash2 className="w-5 h-5" />
-            Trash It
+            Delete Item
           </button>
         </div>
       ) : null}

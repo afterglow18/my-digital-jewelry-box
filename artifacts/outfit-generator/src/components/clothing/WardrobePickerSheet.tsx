@@ -2,18 +2,13 @@
  * WardrobePickerSheet
  *
  * Slide-up sheet that shows existing wardrobe items for a given category.
- * Tapping an item adds it to the outfit.  An "Add New" button at the bottom
- * falls through to QuickAddSheet so the user can upload a brand-new piece.
+ * Tapping an item adds it to the outfit.
  */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Plus } from "lucide-react";
-import {
-  useListClothing,
-  getListClothingQueryKey,
-  ListClothingCategory,
-  ClothingItem,
-} from "@workspace/api-client-react";
+import { useListClothing, getListClothingQueryKey } from "@/hooks/useLocalWardrobe";
+import type { ClothingItem } from "@/types/local";
 import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { QuickAddSheet } from "./QuickAddSheet";
@@ -28,14 +23,12 @@ const CATEGORY_LABELS: Record<Category, string> = {
 };
 
 interface Props {
-  open:         boolean;
-  onOpenChange: (open: boolean) => void;
-  /** When omitted, shows all categories (for picking extras) */
-  category?:    Category;
-  /** Called with the chosen item so the parent can add it to the outfit */
-  onPick:       (item: ClothingItem) => void;
-  /** Items already in the outfit — shown with a checkmark but still tappable */
-  existingItemIds?: number[];
+  open:             boolean;
+  onOpenChange:     (open: boolean) => void;
+  /** When omitted, shows all categories */
+  category?:        Category;
+  onPick:           (item: ClothingItem) => void;
+  existingItemIds?: string[];
 }
 
 export function WardrobePickerSheet({ open, onOpenChange, category, onPick, existingItemIds = [] }: Props) {
@@ -44,11 +37,10 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
   const [quickAddCategory, setQuickAddCategory] = useState<Category>("makeup");
   const queryClient = useQueryClient();
 
-  // When category is provided fetch that category; otherwise fetch all
-  const params = category ? { category: category as ListClothingCategory } : {};
+  const params = category ? { category } : {};
   const { data: items, isLoading } = useListClothing(
     params,
-    { query: { queryKey: getListClothingQueryKey(params), enabled: open } }
+    { query: { queryKey: getListClothingQueryKey(params), enabled: open } },
   );
 
   const label = category ? CATEGORY_LABELS[category] : "Extra";
@@ -63,7 +55,6 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
   const handleNewlyAdded = (item: ClothingItem) => {
     queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
     setShowQuickAdd(false);
-    // Immediately add the brand-new item to the outfit
     onPick(item);
     onOpenChange(false);
   };
@@ -110,8 +101,10 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                     onClick={() => handlePick(item)}
                     className="flex flex-col gap-1 text-left group"
                   >
-                    <div className="relative w-full aspect-square border-2 border-black overflow-hidden"
-                      style={{ background: "#FDECEF" }}>
+                    <div
+                      className="relative w-full aspect-square border-2 border-black overflow-hidden"
+                      style={{ background: "#FDECEF" }}
+                    >
                       {item.imageObjectPath ? (
                         <img
                           src={getImageUrl(item.imageObjectPath)!}
@@ -120,7 +113,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-2xl">👕</span>
+                          <span className="text-2xl">💄</span>
                         </div>
                       )}
                       {alreadyIn && (
@@ -151,7 +144,6 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
         {/* Footer */}
         <div className="p-4 border-t-2 border-black bg-white flex-shrink-0">
           {category ? (
-            /* Known-category mode: direct Add New button */
             <button
               onClick={() => setShowQuickAdd(true)}
               className="w-full flex items-center justify-center gap-2 py-3
@@ -164,7 +156,6 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
               Add New {label} to Vanity
             </button>
           ) : showCategoryPicker ? (
-            /* Extras mode — category chips */
             <div className="flex flex-col gap-2">
               <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 text-center">
                 Choose a category
@@ -173,11 +164,7 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
                 {(["makeup", "skincare", "hair", "fragrances"] as Category[]).map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => {
-                      setQuickAddCategory(cat);
-                      setShowQuickAdd(true);
-                      setShowCategoryPicker(false);
-                    }}
+                    onClick={() => { setQuickAddCategory(cat); setShowQuickAdd(true); setShowCategoryPicker(false); }}
                     className="py-2.5 border-2 border-black rounded-xl bg-primary font-display font-bold
                                text-sm uppercase tracking-tight
                                shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
@@ -189,7 +176,6 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
               </div>
             </div>
           ) : (
-            /* Extras mode — Add New button that reveals category picker */
             <button
               onClick={() => setShowCategoryPicker(true)}
               className="w-full flex items-center justify-center gap-2 py-3
@@ -205,7 +191,6 @@ export function WardrobePickerSheet({ open, onOpenChange, category, onPick, exis
         </div>
       </motion.div>
 
-      {/* QuickAddSheet for uploading a brand-new item */}
       <AnimatePresence>
         {showQuickAdd && (
           <QuickAddSheet

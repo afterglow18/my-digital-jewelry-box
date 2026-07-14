@@ -1,18 +1,11 @@
 /**
- * UpgradeSheet
- *
- * Full-screen paywall — shown when the user taps the mannequin button or hits
- * a free-tier limit (items / outfits).
- *
- * Design:
- *   Background  — cream #F8F4ED
- *   Card        — black, white text
- *   CTA button  — hot pink #ff91b0, black text
+ * UpgradeSheet — paywall shown when the user hits a free-tier limit.
+ * Purchase is stubbed until RevenueCat is integrated.
  */
 import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { useEntitlements, PurchaseResult } from "@/hooks/useEntitlements";
+import { useEntitlements, type PurchaseResult } from "@/hooks/useEntitlements";
 
 export type UpgradeReason = "items" | "outfits" | "mannequin";
 
@@ -73,8 +66,6 @@ export function UpgradeSheet({ reason, onClose }: Props) {
 
       {/* Body */}
       <div className="flex-1 flex flex-col px-5 pb-4 gap-4 min-h-0">
-
-        {/* Headline */}
         <div className="flex flex-col gap-0.5">
           <h1 className="font-display font-bold text-4xl uppercase tracking-tight leading-none">
             Unlock Your<br />Unlimited<br />Digital Vanity
@@ -84,19 +75,16 @@ export function UpgradeSheet({ reason, onClose }: Props) {
           </p>
         </div>
 
-        {/* Black card — flex-1 so it fills remaining space */}
         <div
           className="rounded-3xl overflow-hidden border-4 border-black flex flex-col flex-1 min-h-0"
           style={{ background: "#0a0a0a", boxShadow: "6px 6px 0px 0px rgba(0,0,0,0.35)" }}
         >
-          {/* "Upgrade once to unlock:" header */}
           <div className="px-5 pt-5 pb-3 border-b border-white/10 flex-shrink-0">
             <p className="font-display font-bold text-base uppercase tracking-tight text-white">
               Upgrade once to unlock:
             </p>
           </div>
 
-          {/* Feature list — fills space evenly */}
           <ul className="px-5 py-0 flex flex-col flex-1 justify-evenly">
             {FEATURES.map(({ emoji, text }) => (
               <li key={text} className="flex items-center gap-4 py-1">
@@ -106,25 +94,18 @@ export function UpgradeSheet({ reason, onClose }: Props) {
             ))}
           </ul>
 
-          {/* Price */}
           <div className="px-5 pb-5 pt-2 border-t border-white/10 flex-shrink-0">
             <div className="flex items-baseline gap-2">
-              <span
-                className="font-display font-bold text-5xl leading-none"
-                style={{ color: "#D9A7B3" }}
-              >
+              <span className="font-display font-bold text-5xl leading-none" style={{ color: "#D9A7B3" }}>
                 $4.99
               </span>
-              <span className="text-white/50 font-semibold text-sm leading-tight">
-                one&#8209;time
-              </span>
+              <span className="text-white/50 font-semibold text-sm leading-tight">one&#8209;time</span>
             </div>
           </div>
         </div>
-
       </div>
 
-      {/* CTA footer — extra bottom padding clears iPhone home indicator */}
+      {/* CTA footer */}
       <div
         className="px-5 pt-3 flex flex-col gap-3 flex-shrink-0"
         style={{ paddingBottom: "max(2rem, env(safe-area-inset-bottom))" }}

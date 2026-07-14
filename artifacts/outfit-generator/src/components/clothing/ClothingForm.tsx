@@ -1,15 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ClothingItemInputCategory } from "@workspace/api-client-react";
-import { useCallback, useState } from "react";
+import type { ClothingCategory } from "@/types/local";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { getImageUrl } from "@/lib/utils";
 
+const CATEGORIES: ClothingCategory[] = ["makeup", "skincare", "hair", "fragrances"];
+
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  category: z.nativeEnum(ClothingItemInputCategory),
+  category: z.enum(["makeup", "skincare", "hair", "fragrances"]),
   color: z.string().optional(),
   brand: z.string().optional(),
   notes: z.string().optional(),
@@ -68,7 +69,6 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
   }, [form]);
 
   const imagePath = form.watch("imageObjectPath");
-  const categories = Object.values(ClothingItemInputCategory);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
@@ -111,7 +111,7 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
           <label className="block font-bold uppercase text-sm mb-1">Item Name *</label>
           <input 
             {...form.register("name")}
-            placeholder="e.g. Vintage Plaid Skirt"
+            placeholder="e.g. Charlotte Tilbury Flawless Filter"
             className="w-full px-4 py-3 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-y-0.5 focus:translate-x-0.5 outline-none transition-all font-medium"
           />
           {form.formState.errors.name && (
@@ -121,8 +121,8 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
 
         <div>
           <label className="block font-bold uppercase text-sm mb-2">Category *</label>
-          <div className="grid grid-cols-3 gap-2">
-            {categories.map(cat => (
+          <div className="grid grid-cols-2 gap-2">
+            {CATEGORIES.map(cat => (
               <label key={cat} className="cursor-pointer">
                 <input 
                   type="radio" 
@@ -143,7 +143,7 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
             <label className="block font-bold uppercase text-sm mb-1">Color</label>
             <input 
               {...form.register("color")}
-              placeholder="Yellow"
+              placeholder="Rose Gold"
               className="w-full px-3 py-2 bg-white border-2 border-black focus:bg-accent outline-none font-medium"
             />
           </div>
@@ -151,7 +151,7 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
             <label className="block font-bold uppercase text-sm mb-1">Brand</label>
             <input 
               {...form.register("brand")}
-              placeholder="e.g. Thrifted"
+              placeholder="e.g. NARS"
               className="w-full px-3 py-2 bg-white border-2 border-black focus:bg-accent outline-none font-medium"
             />
           </div>
@@ -161,7 +161,7 @@ export function ClothingForm({ initialData, onSubmit, isSubmitting, submitLabel 
           <label className="block font-bold uppercase text-sm mb-1">Notes</label>
           <textarea 
             {...form.register("notes")}
-            placeholder="Totally matches with..."
+            placeholder="Anything worth remembering..."
             rows={3}
             className="w-full px-3 py-2 bg-white border-2 border-black focus:bg-accent outline-none font-medium resize-none"
           />

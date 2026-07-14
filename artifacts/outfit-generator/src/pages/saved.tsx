@@ -6,15 +6,15 @@ import {
   useAddItemToOutfit,
   useRemoveItemFromOutfit,
   getListOutfitsQueryKey,
-  ClothingItem,
-} from "@workspace/api-client-react";
+} from "@/hooks/useLocalOutfits";
+import type { ClothingItem } from "@/types/local";
 import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeSheet } from "@/components/paywall/UpgradeSheet";
-import { FREE_OUTFIT_LIMIT } from "@/lib/entitlements";
+import { FREE_OUTFIT_LIMIT } from "@/types/local";
 import { WardrobePickerSheet } from "@/components/clothing/WardrobePickerSheet";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
 
@@ -29,13 +29,9 @@ const SLOT_LABELS: Record<SlotKey, string> = {
 };
 
 function ItemPhoto({
-  item,
-  size = "md",
-  onClick,
+  item, size = "md", onClick,
 }: {
-  item: ClothingItem;
-  size?: "sm" | "md" | "lg";
-  onClick?: () => void;
+  item: ClothingItem; size?: "sm" | "md" | "lg"; onClick?: () => void;
 }) {
   const sizeClass = size === "lg" ? "h-28" : size === "md" ? "h-20" : "h-14";
   return (
@@ -72,13 +68,13 @@ export default function SavedPage() {
   const queryClient = useQueryClient();
   const { tier } = useEntitlements();
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [replacingSlot, setReplacingSlot] = useState<{ outfitId: number; category: SlotKey } | null>(null);
-  const [addingExtra, setAddingExtra]     = useState<number | null>(null);
+  const [replacingSlot, setReplacingSlot] = useState<{ outfitId: string; category: SlotKey } | null>(null);
+  const [addingExtra, setAddingExtra]     = useState<string | null>(null);
   const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
-  const [renamingId, setRenamingId] = useState<number | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
-  const [editingNotesId, setEditingNotesId] = useState<number | null>(null);
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const notesInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,34 +86,34 @@ export default function SavedPage() {
     if (editingNotesId !== null) notesInputRef.current?.focus();
   }, [editingNotesId]);
 
-  const startRename = (id: number, currentName: string) => {
+  const startRename = (id: string, currentName: string) => {
     setRenamingId(id);
     setRenameValue(currentName);
   };
 
-  const commitRename = (id: number) => {
+  const commitRename = (id: string) => {
     const trimmed = renameValue.trim();
     if (trimmed && trimmed !== outfits?.find((o) => o.id === id)?.name) {
       renameOutfit.mutate(
         { id, data: { name: trimmed } },
-        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
       );
     }
     setRenamingId(null);
   };
 
-  const startEditNotes = (id: number, currentNotes: string | null | undefined) => {
+  const startEditNotes = (id: string, currentNotes: string | null | undefined) => {
     setEditingNotesId(id);
     setNotesValue(currentNotes ?? "");
   };
 
-  const commitNotes = (id: number) => {
+  const commitNotes = (id: string) => {
     const trimmed = notesValue.trim();
     const current = outfits?.find((o) => o.id === id)?.notes ?? "";
     if (trimmed !== (current ?? "")) {
       renameOutfit.mutate(
         { id, data: { notes: trimmed || null } },
-        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+        { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
       );
     }
     setEditingNotesId(null);
@@ -127,17 +123,17 @@ export default function SavedPage() {
   const outfitCount = outfits?.length ?? 0;
   const atLimit = isFree && outfitCount >= FREE_OUTFIT_LIMIT;
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     deleteOutfit.mutate(
       { id },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
     );
   };
 
-  const handleRemoveItem = (outfitId: number, itemId: number) => {
+  const handleRemoveItem = (outfitId: string, itemId: string) => {
     removeItemFromOutfit.mutate(
       { id: outfitId, itemId },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
     );
   };
 
@@ -145,7 +141,7 @@ export default function SavedPage() {
     if (replacingSlot == null) return;
     addItemToOutfit.mutate(
       { id: replacingSlot.outfitId, data: { itemId: item.id } },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
     );
     setReplacingSlot(null);
   };
@@ -154,7 +150,7 @@ export default function SavedPage() {
     if (addingExtra == null) return;
     addItemToOutfit.mutate(
       { id: addingExtra, data: { itemId: item.id } },
-      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) }
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
     );
     setAddingExtra(null);
   };
@@ -165,7 +161,6 @@ export default function SavedPage() {
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
         <div className="flex items-center justify-between">
           <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
-
           {isFree && outfitCount > 0 && (
             <button
               onClick={() => setShowUpgrade(true)}
@@ -188,15 +183,11 @@ export default function SavedPage() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 border-2 border-black rounded-xl bg-primary p-4
-                     shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+          className="mb-5 border-2 border-black rounded-xl bg-primary p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
         >
-          <p className="font-display font-bold text-sm uppercase tracking-tight">
-            🔓 Lookbook is full
-          </p>
+          <p className="font-display font-bold text-sm uppercase tracking-tight">🔓 Lookbook is full</p>
           <p className="text-xs text-black/60 mt-1 mb-3 leading-snug">
-            You've saved {FREE_OUTFIT_LIMIT} looks — the free limit.
-            Unlock Forever to save unlimited looks.
+            You've saved {FREE_OUTFIT_LIMIT} looks — the free limit. Unlock Forever to save unlimited looks.
           </p>
           <button
             onClick={() => setShowUpgrade(true)}
@@ -219,17 +210,15 @@ export default function SavedPage() {
       ) : outfits && outfits.length > 0 ? (
         <div className="flex flex-col gap-6">
           {outfits.map((outfit) => {
-            // Group items by category — first match per slot wins
             const bySlot = (outfit.items ?? []).reduce<Partial<Record<SlotKey, ClothingItem>>>(
               (acc, item) => {
                 const key = item.category as SlotKey;
                 if (SLOT_ORDER.includes(key) && !acc[key]) acc[key] = item;
                 return acc;
               },
-              {}
+              {},
             );
 
-            // Any items whose category isn't a known slot (e.g. legacy data)
             const knownIds = new Set(Object.values(bySlot).map((i) => i?.id));
             const extras = (outfit.items ?? []).filter((i) => !knownIds.has(i.id));
 
@@ -298,10 +287,7 @@ export default function SavedPage() {
                       </button>
                     </form>
                   ) : (
-                    <button
-                      onClick={() => startEditNotes(outfit.id, outfit.notes)}
-                      className="w-full text-left group"
-                    >
+                    <button onClick={() => startEditNotes(outfit.id, outfit.notes)} className="w-full text-left group">
                       {outfit.notes ? (
                         <p className="text-xs text-black/60 leading-snug flex items-start gap-1">
                           <span className="flex-1">{outfit.notes}</span>
@@ -314,7 +300,7 @@ export default function SavedPage() {
                   )}
                 </div>
 
-                {/* 4-slot beauty product grid: makeup / skincare / hair / fragrance */}
+                {/* 4-slot grid */}
                 <div className="p-3">
                   <div className="grid grid-cols-4 gap-2">
                     {SLOT_ORDER.map((slot) => {
@@ -354,7 +340,7 @@ export default function SavedPage() {
                     })}
                   </div>
 
-                  {/* 5 fixed extra slots */}
+                  {/* Extras */}
                   <div className="mt-3 pt-3 border-t border-black/10">
                     <p className="text-[8px] font-bold uppercase tracking-widest text-black/30 mb-2">Extras</p>
                     <div className="grid grid-cols-5 gap-1.5">
@@ -399,7 +385,7 @@ export default function SavedPage() {
                   </div>
                 </div>
 
-                {/* Footer: item count */}
+                {/* Footer */}
                 <div className="px-3 pb-3">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wide">
                     {outfit.items?.length ?? 0} product{(outfit.items?.length ?? 0) !== 1 ? "s" : ""}
@@ -423,12 +409,10 @@ export default function SavedPage() {
 
       {/* Upgrade sheet */}
       <AnimatePresence>
-        {showUpgrade && (
-          <UpgradeSheet reason="outfits" onClose={() => setShowUpgrade(false)} />
-        )}
+        {showUpgrade && <UpgradeSheet reason="outfits" onClose={() => setShowUpgrade(false)} />}
       </AnimatePresence>
 
-      {/* Vanity picker for replacing a slot */}
+      {/* Slot picker */}
       <AnimatePresence>
         {replacingSlot !== null && (
           <WardrobePickerSheet
@@ -436,30 +420,26 @@ export default function SavedPage() {
             open
             onOpenChange={(open) => { if (!open) setReplacingSlot(null); }}
             category={replacingSlot.category}
-            existingItemIds={
-              outfits?.find((o) => o.id === replacingSlot.outfitId)?.items?.map((i) => i.id) ?? []
-            }
+            existingItemIds={outfits?.find((o) => o.id === replacingSlot.outfitId)?.items?.map((i) => i.id) ?? []}
             onPick={handlePickedItem}
           />
         )}
       </AnimatePresence>
 
-      {/* All-category picker for extras */}
+      {/* Extras picker */}
       <AnimatePresence>
         {addingExtra !== null && (
           <WardrobePickerSheet
             key={`extra-${addingExtra}`}
             open
             onOpenChange={(open) => { if (!open) setAddingExtra(null); }}
-            existingItemIds={
-              outfits?.find((o) => o.id === addingExtra)?.items?.map((i) => i.id) ?? []
-            }
+            existingItemIds={outfits?.find((o) => o.id === addingExtra)?.items?.map((i) => i.id) ?? []}
             onPick={handlePickedExtra}
           />
         )}
       </AnimatePresence>
 
-      {/* Item details sheet */}
+      {/* Item details */}
       <AnimatePresence>
         {detailsItem && (
           <ItemDetailsSheet

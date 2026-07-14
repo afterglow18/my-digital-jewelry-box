@@ -1,5 +1,5 @@
 /**
- * FavoritesPage ("Totally 💛") — every clothing item the user has hearted.
+ * FavoritesPage ("My Faves 💕") — every clothing item the user has hearted.
  * Displays as a 4-column grid with uniform square cards.
  * Items can be dragged to reorder; order is persisted in localStorage.
  * Tap an item to open the full details sheet.
@@ -11,8 +11,8 @@ import {
   useListClothing,
   useUpdateClothingItem,
   getListClothingQueryKey,
-  ClothingItem,
-} from "@workspace/api-client-react";
+} from "@/hooks/useLocalWardrobe";
+import type { ClothingItem } from "@/types/local";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
 import { ItemDetailsSheet } from "@/components/clothing/ItemDetailsSheet";
@@ -43,13 +43,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const ORDER_KEY = "closet-favorites-order";
 
-function getSavedOrder(): number[] {
+function getSavedOrder(): string[] {
   try { return JSON.parse(localStorage.getItem(ORDER_KEY) ?? "[]"); } catch { return []; }
 }
-function saveOrder(ids: number[]) {
+function saveOrder(ids: string[]) {
   try { localStorage.setItem(ORDER_KEY, JSON.stringify(ids)); } catch {}
 }
-function applyOrder(items: ClothingItem[], order: number[]): ClothingItem[] {
+function applyOrder(items: ClothingItem[], order: string[]): ClothingItem[] {
   if (!order.length) return items;
   const map = new Map(items.map((i) => [i.id, i]));
   const ordered = order.map((id) => map.get(id)).filter(Boolean) as ClothingItem[];
@@ -59,21 +59,8 @@ function applyOrder(items: ClothingItem[], order: number[]): ClothingItem[] {
 
 // ── Sortable tile ─────────────────────────────────────────────────────────────
 
-function SortableTile({
-  item,
-  onTap,
-}: {
-  item: ClothingItem;
-  onTap: (item: ClothingItem) => void;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
+function SortableTile({ item, onTap }: { item: ClothingItem; onTap: (item: ClothingItem) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -85,7 +72,6 @@ function SortableTile({
 
   return (
     <div ref={setNodeRef} style={style}>
-      {/* Drag + tap target — whole tile */}
       <button
         {...attributes}
         {...listeners}
@@ -106,16 +92,14 @@ function SortableTile({
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-2xl opacity-30">
-              {item.category === "shoes" ? "👟"
-                : item.category === "dresses" ? "👗"
-                : item.category === "accessories" ? "👜"
-                : "👚"}
+              {item.category === "fragrances" ? "🌸"
+                : item.category === "skincare" ? "🧴"
+                : item.category === "hair" ? "💆"
+                : "💄"}
             </span>
           </div>
         )}
       </button>
-
-      {/* Category label */}
       <p className="mt-1 text-[9px] font-bold uppercase text-center text-muted-foreground tracking-wide truncate">
         {item.name || CATEGORY_LABELS[item.category ?? ""] || "—"}
       </p>
@@ -126,19 +110,16 @@ function SortableTile({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function FavoritesPage() {
-  // Fetch all items in one query (no category filter) so nothing is missed
   const { data: allItems = [], isLoading } = useListClothing({});
-
   const rawFavorites = allItems.filter((item) => item.isFavorite);
 
-  const [orderedIds, setOrderedIds] = useState<number[]>([]);
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
   const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
 
   useEffect(() => { setOrderedIds(getSavedOrder()); }, []);
 
   const favorites = applyOrder(rawFavorites, orderedIds);
 
-  const updateItem  = useUpdateClothingItem();
   const queryClient = useQueryClient();
 
   const sensors = useSensors(
@@ -151,8 +132,8 @@ export default function FavoritesPage() {
     if (!over || active.id === over.id) return;
     setOrderedIds(() => {
       const ids = favorites.map((i) => i.id);
-      const oldIndex = ids.indexOf(active.id as number);
-      const newIndex = ids.indexOf(over.id as number);
+      const oldIndex = ids.indexOf(active.id as string);
+      const newIndex = ids.indexOf(over.id as string);
       if (oldIndex === -1 || newIndex === -1) return ids;
       const next = arrayMove(ids, oldIndex, newIndex);
       saveOrder(next);
@@ -161,14 +142,12 @@ export default function FavoritesPage() {
   };
 
   const handleDetailsClose = () => {
-    // Refresh in case isFavorite changed inside the sheet
     queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
     setDetailsItem(null);
   };
 
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10">
-
       <header className="mb-5">
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">
           My Faves 💕
@@ -185,11 +164,7 @@ export default function FavoritesPage() {
           ))}
         </div>
       ) : favorites.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={favorites.map((i) => i.id)} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-4 gap-3">
               {favorites.map((item) => (
@@ -212,7 +187,6 @@ export default function FavoritesPage() {
         </div>
       )}
 
-      {/* Item details sheet */}
       <AnimatePresence>
         {detailsItem && (
           <ItemDetailsSheet

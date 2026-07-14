@@ -5,19 +5,13 @@
  *   pick ──(file chosen)──► uploading ──► close
  *
  * Users pick a photo from their camera or photo library.
- * No AI validation — photos are saved directly.
+ * Photos are saved directly to IndexedDB as compressed data URLs.
  */
 import React, { useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  Loader2,
-  Check,
-} from "lucide-react";
-import {
-  useCreateClothingItem,
-  getListClothingQueryKey,
-} from "@workspace/api-client-react";
+import { X, Loader2, Check } from "lucide-react";
+import { useCreateClothingItem, getListClothingQueryKey } from "@/hooks/useLocalWardrobe";
+import type { ClothingItem } from "@/types/local";
 import { useQueryClient } from "@tanstack/react-query";
 import { encodeToPng } from "@/lib/processImage";
 
@@ -32,34 +26,28 @@ const CATEGORY_LABELS: Record<Category, string> = {
   fragrances: "Fragrance",
 };
 
-type Phase =
-  | "pick"       // two-button landing screen
-  | "uploading"; // encoding + uploading PNG, creating DB record
+type Phase = "pick" | "uploading";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-/** Convert a Blob to a JPEG data URL (compressed, ready for DB storage). */
+/** Compress a Blob to a JPEG data URL capped at 800 px wide. */
 async function blobToDataUrl(blob: Blob): Promise<string> {
-
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
     img.onload = () => {
       URL.revokeObjectURL(url);
       const canvas = document.createElement("canvas");
-      // Cap at 800px wide to keep data URLs small
       const scale = Math.min(1, 800 / img.naturalWidth);
       canvas.width  = Math.round(img.naturalWidth  * scale);
       canvas.height = Math.round(img.naturalHeight * scale);
       canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      resolve(dataUrl);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
     };
     img.onerror = reject;
     img.src = url;
   });
 }
-
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
@@ -68,8 +56,8 @@ interface Props {
   onOpenChange:  (open: boolean) => void;
   category:      Category;
   existingCount: number;
-  /** Called with the newly created item after a successful upload. */
-  onCreated?:    (item: import("@workspace/api-client-react").ClothingItem) => void;
+  /** Called with the newly created item after a successful save. */
+  onCreated?:    (item: ClothingItem) => void;
 }
 
 const PHOTO_TIPS = [
@@ -80,29 +68,25 @@ const PHOTO_TIPS = [
 ] as const;
 
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
-  const [phase,    setPhase]   = useState<Phase>("pick");
+  const [phase,    setPhase]    = useState<Phase>("pick");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Two separate file inputs: one triggers camera, one opens gallery
   const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const createItem  = useCreateClothingItem();
   const queryClient = useQueryClient();
 
-  // ── Reset ────────────────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
     setPhase("pick");
     setErrorMsg(null);
     onOpenChange(false);
   }, [onOpenChange]);
 
-  // ── File picked → encode → upload → create DB record → close ──
   const handleFile = useCallback(async (file: File) => {
     setErrorMsg(null);
     setPhase("uploading");
 
-    // 1. Encode to PNG
     let png: Blob;
     try {
       png = await encodeToPng(file);
@@ -113,17 +97,15 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       return;
     }
 
-    // 2. Convert to data URL & save
     try {
-      const path = await blobToDataUrl(png);
-
+      const dataUrl = await blobToDataUrl(png);
       const label    = CATEGORY_LABELS[category];
       const n        = existingCount + 1;
       const autoName = n === 1 ? label : `${label} ${n}`;
 
       await new Promise<void>((resolve, reject) => {
         createItem.mutate(
-          { data: { name: autoName, category, imageObjectPath: path } },
+          { data: { name: autoName, category, imageObjectPath: dataUrl } },
           {
             onSuccess: (createdItem) => {
               queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
@@ -137,16 +119,16 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
       handleClose();
     } catch (err) {
-      console.error("Upload / create failed:", err);
-      setErrorMsg("Could not save the item. Check your connection and try again.");
+      console.error("Save failed:", err);
+      setErrorMsg("Could not save the item. Please try again.");
       setPhase("pick");
     }
-  }, [category, existingCount, createItem, queryClient, handleClose]);
+  }, [category, existingCount, createItem, queryClient, handleClose, onCreated]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
-    e.target.value = ""; // allow re-selecting same file
+    e.target.value = "";
   };
 
   if (!open) return null;
@@ -197,9 +179,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 </p>
               )}
 
-              {/* Two big action buttons */}
               <div className="flex gap-3">
-                {/* Take Photo */}
                 <button
                   onClick={() => cameraInputRef.current?.click()}
                   className="flex-1 flex flex-col items-center justify-center gap-3 py-8
@@ -214,7 +194,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                   </span>
                 </button>
 
-                {/* Upload Photo */}
                 <button
                   onClick={() => galleryInputRef.current?.click()}
                   className="flex-1 flex flex-col items-center justify-center gap-3 py-8
@@ -230,7 +209,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                 </button>
               </div>
 
-              {/* Photo tips */}
               <div className="border-2 border-black rounded-2xl bg-white p-4
                               shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
                 <p className="font-display font-bold text-sm uppercase tracking-tight mb-3 flex items-center gap-2">
@@ -276,7 +254,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       </div>
 
       {/* Hidden file inputs */}
-      {/* Camera — opens native camera on mobile */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -285,7 +262,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
         className="hidden"
         onChange={handleInputChange}
       />
-      {/* Gallery — opens photo library / file picker */}
       <input
         ref={galleryInputRef}
         type="file"

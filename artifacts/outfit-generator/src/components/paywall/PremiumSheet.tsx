@@ -1,16 +1,12 @@
 /**
- * PremiumSheet
- *
- * Full-screen paywall shown when the user taps the Mannequin button without a
- * premium entitlement. Pitches the Pro Stylist upgrade specifically, while
- * noting that the $4.99 Unlock Forever plan is available if they only want
- * unlimited items/outfits.
+ * PremiumSheet — paywall for the mannequin feature.
+ * Purchase is stubbed until RevenueCat is integrated.
  */
 import React, { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { X, Check } from "lucide-react";
-import { useEntitlements, PurchaseResult } from "@/hooks/useEntitlements";
-import type { PurchaseProduct } from "@/lib/entitlements";
+import { X } from "lucide-react";
+import { useEntitlements, type PurchaseResult } from "@/hooks/useEntitlements";
+import type { PurchaseProduct } from "@/types/local";
 
 interface Props {
   onClose: () => void;
@@ -52,9 +48,7 @@ export function PremiumSheet({ onClose }: Props) {
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-white border-b-2 border-black flex-shrink-0">
-        <h2 className="font-display font-bold text-xl uppercase tracking-tight">
-          Pro Stylist
-        </h2>
+        <h2 className="font-display font-bold text-xl uppercase tracking-tight">Pro Stylist</h2>
         <button
           onClick={onClose}
           className="w-9 h-9 border-2 border-black rounded-full flex items-center justify-center
@@ -67,8 +61,6 @@ export function PremiumSheet({ onClose }: Props) {
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto flex flex-col p-5 gap-5">
-
-        {/* Hero */}
         <div className="border-4 border-black rounded-2xl bg-black text-white
                         shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
           <div className="px-5 pt-6 pb-5 flex flex-col gap-2">
@@ -82,12 +74,8 @@ export function PremiumSheet({ onClose }: Props) {
           </div>
         </div>
 
-        {/* Feature list */}
-        <div className="border-2 border-black rounded-2xl bg-white p-4
-                        shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-          <p className="font-display font-bold text-sm uppercase tracking-tight mb-3">
-            Pro Stylist includes
-          </p>
+        <div className="border-2 border-black rounded-2xl bg-white p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <p className="font-display font-bold text-sm uppercase tracking-tight mb-3">Pro Stylist includes</p>
           <ul className="flex flex-col gap-3">
             {PRO_FEATURES.map(({ emoji, text }) => (
               <li key={text} className="flex items-start gap-3 text-sm leading-snug">
@@ -97,12 +85,10 @@ export function PremiumSheet({ onClose }: Props) {
             ))}
           </ul>
         </div>
-
       </div>
 
       {/* CTA footer */}
       <div className="px-5 pb-6 pt-4 bg-white border-t-2 border-black flex flex-col gap-3 flex-shrink-0">
-        {/* Primary: Pro Stylist */}
         <button
           onClick={() => handlePurchase("premium")}
           disabled={!!pending}
@@ -115,7 +101,6 @@ export function PremiumSheet({ onClose }: Props) {
           {pending === "premium" ? "Opening checkout…" : "Get Pro Stylist – $9.99"}
         </button>
 
-        {/* Secondary: Unlock Forever (if they just want unlimited without mannequin) */}
         <button
           onClick={() => handlePurchase("unlock")}
           disabled={!!pending}
