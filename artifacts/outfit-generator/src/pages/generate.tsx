@@ -357,7 +357,7 @@ export default function GeneratePage() {
                   fontFamily: "var(--font-display)", margin: 0,
                 }}>Your vanity is empty</p>
                 <p style={{ fontSize: 11, color: "#9a5060", marginTop: 5, lineHeight: 1.5 }}>
-                  Add makeup, skincare, hair or fragrances in the Vanity tab first.
+                  Add makeup, skincare, hair care or fragrances in the Vanity tab first.
                 </p>
               </div>
             )}
