@@ -191,16 +191,17 @@ export default function WardrobePage() {
         background: "#E8B0B8",
       }}
     >
-      {/* Background image */}
+      {/* Background image — centred via CSS transform; iOS clips transform overflow correctly */}
       <img
         src="/vanity-bg.png?v=11"
         alt="My Digital Vanity"
         style={{
           position: "absolute",
-          top:    ready ? ir.top    : 0,
-          left:   ready ? ir.left  : 0,
-          width:  ready ? ir.width : "100%",
-          height: ready ? ir.height: "auto",
+          top:       ready ? ir.top   : 0,
+          left:      "50%",
+          transform: "translateX(-50%)",
+          width:     ready ? ir.width  : "100%",
+          height:    ready ? ir.height : "auto",
           display: "block",
           pointerEvents: "none",
           userSelect: "none",
