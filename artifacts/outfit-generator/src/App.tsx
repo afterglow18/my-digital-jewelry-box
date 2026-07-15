@@ -48,7 +48,7 @@ function AppShell() {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
 
   const [splashDone, setSplashDone] = useState<boolean>(
-    () => isPreview || localStorage.getItem('mdv-splash-seen') === '1',
+    () => isPreview || sessionStorage.getItem('mdv-splash-seen') === '1',
   );
 
   const [entered, setEntered] = useState<boolean>(
@@ -56,7 +56,7 @@ function AppShell() {
   );
 
   const handleSplashContinue = useCallback(() => {
-    localStorage.setItem('mdv-splash-seen', '1');
+    sessionStorage.setItem('mdv-splash-seen', '1');
     setSplashDone(true);
   }, []);
 
