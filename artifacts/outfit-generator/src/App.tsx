@@ -47,16 +47,15 @@ function Router() {
 function AppShell() {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
 
-  const [splashDone, setSplashDone] = useState<boolean>(
-    () => isPreview || sessionStorage.getItem('mdv-splash-seen') === '1',
-  );
+  // Always show splash on every launch — WKWebView preserves sessionStorage
+  // between app restarts so we never gate it; it's only 1 s anyway.
+  const [splashDone, setSplashDone] = useState<boolean>(() => isPreview);
 
   const [entered, setEntered] = useState<boolean>(
     () => isPreview || sessionStorage.getItem('closet-entered') === '1',
   );
 
   const handleSplashContinue = useCallback(() => {
-    sessionStorage.setItem('mdv-splash-seen', '1');
     setSplashDone(true);
   }, []);
 
