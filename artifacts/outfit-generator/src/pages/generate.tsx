@@ -48,9 +48,10 @@ function useImageRect(ref: RefObject<HTMLDivElement>): ImgRect {
       const c = ref.current;
       if (!c) return;
       const cW = c.clientWidth, cH = c.clientHeight;
-      const iR = IMG_W / IMG_H;
-      // Cover: scale by height so the image always fills the full container height.
-      const rH = cH, rW = cH * iR, rT = 0, rL = (cW - rW) / 2;
+      // True object-fit:cover — use whichever scale fills both dimensions.
+      const scale = Math.max(cW / IMG_W, cH / IMG_H);
+      const rW = IMG_W * scale, rH = IMG_H * scale;
+      const rL = (cW - rW) / 2, rT = (cH - rH) / 2;
       setRect({ top: rT, left: rL, width: rW, height: rH, containerH: cH });
     };
     compute();
