@@ -72,8 +72,7 @@ export default function HeroSplash({ onContinue }: Props) {
             letterSpacing: "-0.02em",
             lineHeight: 1.2,
             color: "#fff8ee",
-            WebkitTextStroke: "1.5px #8B1A4A",
-            textShadow: "0 2px 10px rgba(0,0,0,0.5)",
+            textShadow: "0 0 28px rgba(255,210,100,0.55), 0 2px 10px rgba(0,0,0,0.7)",
           }}
         >
           WELCOME TO
