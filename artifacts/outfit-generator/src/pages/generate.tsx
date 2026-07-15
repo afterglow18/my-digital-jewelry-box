@@ -48,12 +48,11 @@ function useImageRect(ref: RefObject<HTMLDivElement>): ImgRect {
       const c = ref.current;
       if (!c) return;
       const cW = c.clientWidth, cH = c.clientHeight;
-      // Cover: scale by height to fill container. Clamp left to 0 so iOS
-      // WKWebView never sees a negative left (it won't clip that side).
-      // Right-side overflow is clipped correctly by overflow:hidden.
+      // Cover: scale to fill. rL may be negative — used only for UI positioning.
+      // The image itself uses left:50%+translateX(-50%) so iOS clips both sides.
       const scale = Math.max(cW / IMG_W, cH / IMG_H);
       const rW = IMG_W * scale, rH = IMG_H * scale;
-      const rL = Math.max(0, (cW - rW) / 2), rT = (cH - rH) / 2;
+      const rL = (cW - rW) / 2, rT = (cH - rH) / 2;
       setRect({ top: rT, left: rL, width: rW, height: rH, containerH: cH });
     };
     compute();
