@@ -51,35 +51,6 @@ export default function HeroSplash({ onContinue }: Props) {
         }}
       />
 
-      {/* Same title text as the lights page */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          textAlign: "center",
-          pointerEvents: "none",
-          padding: "0 48px",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "var(--font-display, serif)",
-            fontWeight: 900,
-            fontSize: "clamp(28px, 8vw, 40px)",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.2,
-            color: "#fff8ee",
-            textShadow: "0 0 28px rgba(255,210,100,0.55), 0 2px 10px rgba(0,0,0,0.7)",
-          }}
-        >
-          WELCOME TO
-          <br />
-          MY DIGITAL VANITY
-        </div>
-      </div>
     </motion.div>
   );
 }

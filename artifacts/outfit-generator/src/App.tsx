@@ -44,39 +44,36 @@ function Router() {
   );
 }
 
+/**
+ * App flow every session:
+ *   welcome (lights) → hero image (1 s) → main app
+ */
+type Phase = 'welcome' | 'hero' | 'entered';
+
 function AppShell() {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
 
-  // Always show splash on every launch — WKWebView preserves sessionStorage
-  // between app restarts so we never gate it; it's only 1 s anyway.
-  const [splashDone, setSplashDone] = useState<boolean>(() => isPreview);
+  const [phase, setPhase] = useState<Phase>(() => isPreview ? 'entered' : 'welcome');
 
-  const [entered, setEntered] = useState<boolean>(
-    () => isPreview || sessionStorage.getItem('closet-entered') === '1',
-  );
+  // Called when the vanity lights finish their animation
+  const handleLightsUp = useCallback(() => setPhase('hero'), []);
 
-  const handleSplashContinue = useCallback(() => {
-    setSplashDone(true);
-  }, []);
-
-  const handleEnter = () => {
-    sessionStorage.setItem('closet-entered', '1');
-    setEntered(true);
-  };
+  // Called when the hero image 1-second hold ends
+  const handleHeroDone = useCallback(() => setPhase('entered'), []);
 
   return (
     <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Router />
 
-      {/* Welcome doors — shown once per session */}
-      {splashDone && !entered && (
-        <WelcomePage onEnter={handleEnter} />
+      {/* Step 1 — vanity lights screen */}
+      {phase === 'welcome' && (
+        <WelcomePage onEnter={handleLightsUp} />
       )}
 
-      {/* Hero splash — shown once ever on first launch */}
+      {/* Step 2 — full-screen hero image (1 s inspiration moment) */}
       <AnimatePresence>
-        {!splashDone && (
-          <HeroSplash onContinue={handleSplashContinue} />
+        {phase === 'hero' && (
+          <HeroSplash onContinue={handleHeroDone} />
         )}
       </AnimatePresence>
     </WouterRouter>
