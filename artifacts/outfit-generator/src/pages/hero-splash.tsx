@@ -71,13 +71,13 @@ export default function HeroSplash({ onContinue }: Props) {
             fontSize: "clamp(28px, 8vw, 40px)",
             letterSpacing: "-0.02em",
             lineHeight: 1.2,
-            color: "#1a0a10",
-            textShadow: "0 2px 12px rgba(0,0,0,0.25)",
+            color: "#fff8ee",
+            textShadow: "0 0 28px rgba(255,210,100,0.55), 0 2px 10px rgba(0,0,0,0.7)",
           }}
         >
-          Welcome to
+          WELCOME TO
           <br />
-          My Digital Vanity
+          MY DIGITAL VANITY
         </div>
       </div>
     </motion.div>
