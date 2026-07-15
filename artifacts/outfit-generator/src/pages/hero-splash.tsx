@@ -10,14 +10,14 @@ interface Props {
   onContinue: () => void;
 }
 
-const HOLD_MS = 2500; // how long the image stays fully visible
+const HOLD_MS = 3000; // how long the image stays fully visible
 
 export default function HeroSplash({ onContinue }: Props) {
-  // Auto-advance after hold period
+  // Auto-advance after hold period — ref avoids resetting timer if parent re-renders
   useEffect(() => {
     const t = setTimeout(onContinue, HOLD_MS);
     return () => clearTimeout(t);
-  }, [onContinue]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <motion.div

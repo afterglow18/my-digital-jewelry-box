@@ -9,7 +9,7 @@ import BackupPage from './pages/backup';
 import WelcomePage from './pages/welcome';
 import HeroSplash from './pages/hero-splash';
 import { queryClient } from '@/lib/queryClient';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { initRevenueCat } from '@/lib/revenuecat';
 
@@ -55,10 +55,10 @@ function AppShell() {
     () => isPreview || sessionStorage.getItem('closet-entered') === '1',
   );
 
-  const handleSplashContinue = () => {
+  const handleSplashContinue = useCallback(() => {
     localStorage.setItem('mdv-splash-seen', '1');
     setSplashDone(true);
-  };
+  }, []);
 
   const handleEnter = () => {
     sessionStorage.setItem('closet-entered', '1');
