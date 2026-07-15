@@ -55,7 +55,7 @@ export default function HeroSplash({ onContinue }: Props) {
       <div
         style={{
           position: "absolute",
-          top: "36%",
+          top: "58%",
           left: 0,
           right: 0,
           zIndex: 10,
@@ -72,7 +72,8 @@ export default function HeroSplash({ onContinue }: Props) {
             letterSpacing: "-0.02em",
             lineHeight: 1.2,
             color: "#fff8ee",
-            textShadow: "0 0 28px rgba(255,210,100,0.55), 0 2px 10px rgba(0,0,0,0.7)",
+            WebkitTextStroke: "1.5px #8B1A4A",
+            textShadow: "0 2px 10px rgba(0,0,0,0.5)",
           }}
         >
           WELCOME TO
