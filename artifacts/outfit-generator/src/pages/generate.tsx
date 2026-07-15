@@ -217,16 +217,17 @@ export default function GeneratePage() {
         background: "#E8B0B8",
       }}
     >
-      {/* Background image */}
+      {/* Background image — CSS cover handles clipping; JS rect used only for UI positioning */}
       <img
         src="/generate-bg.png?v=2"
         alt="My Digital Vanity"
         style={{
           position: "absolute",
-          top:    ready ? ir.top    : 0,
-          left:   ready ? ir.left   : 0,
-          width:  ready ? ir.width  : "100%",
-          height: ready ? ir.height : "auto",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
           display: "block",
           pointerEvents: "none",
           userSelect: "none",
