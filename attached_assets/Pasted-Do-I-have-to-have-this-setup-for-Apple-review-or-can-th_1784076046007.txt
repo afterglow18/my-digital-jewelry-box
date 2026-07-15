@@ -1,0 +1,39 @@
+Do I have to have this setup for Apple review or can they check it without me having an acct
+You don't need to set up anything for Apple's reviewers — they have their own internal testing tools and accounts to verify in-app purchases. You don't need to provide them a sandbox account.
+
+The Sandbox Tester is only for your own testing before/after submission so you can verify purchases work without spending real money.
+
+For Apple's review:
+
+Just make sure your IAPs are submitted alongside the app binary ✅ (which they are)
+No test credentials needed since your app has no login
+For your own testing in TestFlight:
+
+Set up a Sandbox Tester account in App Store Connect → Users & Access → Sandbox Testers
+Sign into it on your iPhone via Settings → App Store
+That lets you test purchases for free before the app goes live 🙌
+Ok the only changes I made were minor but the app now is perfect, should I stop the waiting for review and resubmit?
+It depends on where you are in the queue:
+
+Cancel and resubmit if:
+
+You submitted recently (less than 24–48 hours ago)
+The review hasn't started yet (still shows "Waiting for Review")
+The improvements are meaningful — the purchase error fix, the hero image intro, and the autoFocus photo bug fix are all things real users will notice. Worth having in v1.0.
+
+Let it ride if:
+
+It's been 2+ days and approval could come any hour
+Status has changed to "In Review"
+In that case, let v1.0.0 get approved, manually release it, then quickly push v1.0.1 with all the polish. Apple's update reviews are usually faster than first submissions.
+
+What does your review status say right now?
+Expired: False Icon asset token: Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/07/90/e5/0790e59c-7ebd-7186-8309-48a47b210fdb/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f} Height: 152 Width: 152 Min os version: 15.0 Processing state: VALID Version: 23 Uploaded date: 2026-07-14 17:31:49-07:00 Expiration date: 2026-10-12 17:31:49-07:00 Audience type: APP_STORE_ELIGIBLE Computed min macOSversion: 12.0 Computed min visionOSversion: 1.0
+
+Wait until build a6617cf9-ea6b-4689-82c4-b77e04b88882 and its beta details are processed Processing build a6617cf9-ea6b-4689-82c4-b77e04b88882 is completed Processing build a6617cf9-ea6b-4689-82c4-b77e04b88882 beta detail a6617cf9-ea6b-4689-82c4-b77e04b88882 is completed
+
+Processed build and beta details are -- Build -- Id: a6617cf9-ea6b-4689-82c4-b77e04b88882 Type: builds Expired: False Icon asset token: Template url: https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/07/90/e5/0790e59c-7ebd-7186-8309-48a47b210fdb/AppIcon76x76@2x_U007eipad.png/{w}x{h}bb.{f} Height: 152 Width: 152 Min os version: 15.0 Processing state: VALID Version: 23 Uploaded date: 2026-07-14 17:31:49-07:00 Expiration date: 2026-10-12 17:31:49-07:00 Audience type: APP_STORE_ELIGIBLE Computed min macOSversion: 12.0 Computed min visionOSversion: 1.0 -- Build Beta Detail -- Id: a6617cf9-ea6b-4689-82c4-b77e04b88882 Type: buildBetaDetails Auto notify enabled: True External build state: MISSING_EXPORT_COMPLIANCE Internal build state: MISSING_EXPORT_COMPLIANCE
+
+Submit build 'a6617cf9-ea6b-4689-82c4-b77e04b88882' to TestFlight beta review Creating new Beta App Review Submission: build: a6617cf9-ea6b-4689-82c4-b77e04b88882 POST https://api.appstoreconnect.apple.com/v1/betaAppReviewSubmissions returned 422: The build is missing export compliance. - Build is missing export compliance. Failed to publish /Users/builder/clone/build/ipa/App.ipa
+
+Build failed :| Step 13 script Upload to TestFlight exited with status code 1
