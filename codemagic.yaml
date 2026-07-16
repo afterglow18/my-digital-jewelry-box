@@ -47,20 +47,18 @@ workflows:
       - name: Build web app
         script: pnpm --filter @workspace/outfit-generator build
 
-      - name: Install Capacitor CLI
-        script: pnpm --filter @workspace/outfit-generator exec cap --version || npm install -g @capacitor/cli
-
-      - name: Add iOS platform (if not present)
+      - name: Add iOS platform and sync Capacitor
         script: |
           cd artifacts/outfit-generator
-          if [ ! -d "ios" ]; then
-            npx cap add ios
+          CAP="./node_modules/.bin/cap"
+          if [ ! -f "$CAP" ]; then
+            npm install -g @capacitor/cli
+            CAP="cap"
           fi
-
-      - name: Sync Capacitor
-        script: |
-          cd artifacts/outfit-generator
-          npx cap sync ios
+          if [ ! -d "ios" ]; then
+            $CAP add ios
+          fi
+          $CAP sync ios
 
       - name: Install CocoaPods
         script: |
