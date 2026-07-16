@@ -3,6 +3,8 @@ workflows:
     name: My Digital Jewelry Box – iOS
     max_build_duration: 60
     environment:
+      groups:
+        - app_store_credentials
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.mydigitaljewelrybox.app
