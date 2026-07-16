@@ -38,7 +38,7 @@ export default function HeroSplash({ onContinue }: Props) {
       {/* Full-screen hero image */}
       <img
         src="/hero-splash.jpg"
-        alt="My Digital Vanity"
+        alt="My Digital Jewelry Box"
         draggable={false}
         style={{
           position: "absolute",

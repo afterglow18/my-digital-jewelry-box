@@ -1,5 +1,5 @@
 /**
- * GeneratePage — "Spin It" screen for My Digital Vanity.
+ * GeneratePage — "Spin It" screen for My Digital Jewelry Box.
  * Local-first: data comes from IndexedDB via useListClothing / useSaveOutfit.
  */
 
@@ -222,7 +222,7 @@ export default function GeneratePage() {
       {/* Background image — centred via CSS transform; iOS clips transform overflow correctly */}
       <img
         src="/generate-bg.png?v=2"
-        alt="My Digital Vanity"
+        alt="My Digital Jewelry Box"
         style={{
           position: "absolute",
           top:       ready ? ir.top   : 0,

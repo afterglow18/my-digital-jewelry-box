@@ -194,7 +194,7 @@ export default function WardrobePage() {
       {/* Background image — centred via CSS transform; iOS clips transform overflow correctly */}
       <img
         src="/vanity-bg.png?v=11"
-        alt="My Digital Vanity"
+        alt="My Digital Jewelry Box"
         style={{
           position: "absolute",
           top:       ready ? ir.top   : 0,
