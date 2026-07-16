@@ -51,12 +51,12 @@ const LM = {
   doorL: 0.06,
   doorR: 0.94,
   rows: [
-    { sectionTop: 0.14, shelfY: 0.32 },
-    { sectionTop: 0.32, shelfY: 0.49 },
-    { sectionTop: 0.52, shelfY: 0.68 },
-    { sectionTop: 0.70, shelfY: 0.86 },
+    { sectionTop: 0.16, shelfY: 0.34 },
+    { sectionTop: 0.34, shelfY: 0.51 },
+    { sectionTop: 0.54, shelfY: 0.70 },
+    { sectionTop: 0.72, shelfY: 0.88 },
   ],
-  saveAreaY: 0.88,
+  saveAreaY: 0.90,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -299,9 +299,9 @@ export default function WardrobePage() {
                   <span style={{
                     fontSize: Math.max(9, labelH * 0.55),
                     fontWeight: 300, letterSpacing: "0.22em",
-                    color: "#f0d080",
+                    color: "#3a0d52",
                     fontFamily: "var(--font-display)", textTransform: "uppercase",
-                    textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                    textShadow: "0 1px 3px rgba(255,255,255,0.15)",
                   }}>
                     {btnLabel}
                   </span>
