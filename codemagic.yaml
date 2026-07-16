@@ -16,8 +16,7 @@ workflows:
     scripts:
       - name: Install dependencies
         script: |
-          corepack enable
-          corepack prepare pnpm@latest --activate
+          npm install -g pnpm --force
           pnpm install
 
       - name: Build web app
