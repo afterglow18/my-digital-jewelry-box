@@ -37,20 +37,22 @@ const ROWS: { key: RowKey; btnLabel: string }[] = [
 ];
 
 // ── Image constants ───────────────────────────────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
+const IMG_W = 1086;
+const IMG_H = 1448;
 const NAV_H = 90;
 
+// Layout markers calibrated for jewelry-box-bg.png (1086×1448):
+// Row 1 → velvet ring-roll area; Rows 2-4 → the three open shelf bays.
 const LM = {
-  doorL: 0.207,
-  doorR: 0.801,
+  doorL: 0.06,
+  doorR: 0.94,
   rows: [
-    { sectionTop: 0.241, shelfY: 0.344, btnCY: 0.220 },
-    { sectionTop: 0.390, shelfY: 0.502, btnCY: 0.367 },
-    { sectionTop: 0.547, shelfY: 0.663, btnCY: 0.525 },
-    { sectionTop: 0.702, shelfY: 0.805, btnCY: 0.683 },
+    { sectionTop: 0.17, shelfY: 0.29, btnCY: 0.12 },
+    { sectionTop: 0.29, shelfY: 0.46, btnCY: 0.36 },
+    { sectionTop: 0.49, shelfY: 0.64, btnCY: 0.55 },
+    { sectionTop: 0.67, shelfY: 0.82, btnCY: 0.73 },
   ],
-  saveAreaY: 0.84,
+  saveAreaY: 0.85,
 } as const;
 
 // ── useImageRect ─────────────────────────────────────────────────────────────
@@ -193,7 +195,7 @@ export default function WardrobePage() {
     >
       {/* Background image — centred via CSS transform; iOS clips transform overflow correctly */}
       <img
-        src="/vanity-bg.png?v=11"
+        src="/jewelry-box-bg.png"
         alt="My Digital Jewelry Box"
         style={{
           position: "absolute",

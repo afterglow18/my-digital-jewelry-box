@@ -19,25 +19,26 @@ import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
 
 // ── Layout constants (same as wardrobe.tsx) ───────────────────────────────────
-const IMG_W = 1024;
-const IMG_H = 1536;
+const IMG_W = 1086;
+const IMG_H = 1448;
 const NAV_H = 90;
 const PLUM       = "#3a0d52";
 const PLUM_DARK  = "#220838";
 const GOLD       = "#d4af37";
 const GOLD_LIGHT = "#f0d080";
 
+// Layout markers calibrated for jewelry-box-bg.png (1086×1448)
 const LM = {
-  doorL: 0.207,
-  doorR: 0.801,
+  doorL: 0.06,
+  doorR: 0.94,
   rows: [
-    { sectionTop: 0.241, shelfY: 0.344, btnCY: 0.220 },
-    { sectionTop: 0.390, shelfY: 0.502, btnCY: 0.367 },
-    { sectionTop: 0.547, shelfY: 0.663, btnCY: 0.525 },
-    { sectionTop: 0.702, shelfY: 0.805, btnCY: 0.683 },
+    { sectionTop: 0.17, shelfY: 0.29, btnCY: 0.12 },
+    { sectionTop: 0.29, shelfY: 0.46, btnCY: 0.36 },
+    { sectionTop: 0.49, shelfY: 0.64, btnCY: 0.55 },
+    { sectionTop: 0.67, shelfY: 0.82, btnCY: 0.73 },
   ],
-  barY:   0.848,
-  barBot: 1.000,
+  barY:   0.85,
+  barBot: 1.00,
 } as const;
 
 interface ImgRect {
@@ -224,7 +225,7 @@ export default function GeneratePage() {
     >
       {/* Background image — centred via CSS transform; iOS clips transform overflow correctly */}
       <img
-        src="/generate-bg.png?v=2"
+        src="/jewelry-box-bg.png"
         alt="My Digital Jewelry Box"
         style={{
           position: "absolute",
@@ -239,10 +240,10 @@ export default function GeneratePage() {
           zIndex: 0,
         }}
       />
-      {/* Pink tint overlay — shifts salmon tones toward icon pink */}
+      {/* Subtle plum overlay — preserves jewelry box warmth */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
-        background: "rgba(245, 184, 200, 0.30)",
+        background: "rgba(30, 5, 50, 0.12)",
       }} />
 
       {/* "Matchmaker" subtitle */}
