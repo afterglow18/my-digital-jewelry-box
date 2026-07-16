@@ -188,7 +188,7 @@ export default function WardrobePage() {
         height: `calc(100dvh - ${NAV_H}px)`,
         overflow: "hidden",
         transform: "translateZ(0)", // force iOS WKWebView to honour overflow:hidden
-        background: "#E8B0B8",
+        background: "#160520",
       }}
     >
       {/* Background image — centred via CSS transform; iOS clips transform overflow correctly */}
@@ -208,10 +208,10 @@ export default function WardrobePage() {
           zIndex: 0,
         }}
       />
-      {/* Pink tint overlay — shifts salmon tones toward icon pink */}
+      {/* Plum tint overlay — shifts tones toward jewelry box palette */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
-        background: "rgba(245, 184, 200, 0.30)",
+        background: "rgba(40, 5, 60, 0.22)",
       }} />
 
       {ready && (
@@ -228,12 +228,12 @@ export default function WardrobePage() {
                 zIndex: 25,
                 padding: "3px 14px", borderRadius: 20, border: "none",
                 background: totalItems >= FREE_ITEM_LIMIT
-                  ? "rgba(200,40,40,0.14)"
-                  : "rgba(255,255,255,0.55)",
+                  ? "rgba(200,40,40,0.18)"
+                  : "rgba(212,175,55,0.18)",
                 boxShadow: totalItems >= FREE_ITEM_LIMIT
-                  ? "0 0 0 2px rgba(200,40,40,0.40)"
-                  : "0 0 0 1.5px rgba(180,100,110,0.28)",
-                color: totalItems >= FREE_ITEM_LIMIT ? "#aa0000" : "#7a3a40",
+                  ? "0 0 0 2px rgba(200,40,40,0.50)"
+                  : "0 0 0 1.5px rgba(212,175,55,0.50)",
+                color: totalItems >= FREE_ITEM_LIMIT ? "#ff6060" : "#f0d080",
                 fontWeight: 700, fontSize: 10,
                 letterSpacing: "0.08em", textTransform: "uppercase",
                 whiteSpace: "nowrap", cursor: "pointer",
@@ -344,17 +344,17 @@ export default function WardrobePage() {
               left:   pX(ir, 0.491)  - pW(ir, 0.0625),
               width:  pW(ir, 0.125), height: pW(ir, 0.125),
               borderRadius: "50%", zIndex: 26,
-              background: "linear-gradient(160deg, #E8B0B8 0%, #D0909A 100%)",
-              border: "2px solid #D0909A",
-              boxShadow: "0 2px 8px rgba(180,100,120,0.25)",
+              background: "linear-gradient(160deg, #3a0d52 0%, #220838 100%)",
+              border: "2px solid #d4af37",
+              boxShadow: "0 2px 12px rgba(212,175,55,0.30)",
               cursor: "pointer",
               display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center",
               gap: 0, lineHeight: 1.15, padding: 0,
             }}
           >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#000", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#000", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>LOOK 🩷</span>
+            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#f0d080", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
+            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#f0d080", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>LOOK ✨</span>
           </button>
         </>
       )}
@@ -429,9 +429,9 @@ export default function WardrobePage() {
                     disabled={!saveName.trim() || saveOutfit.isPending}
                     style={{
                       flex: 1, height: 40, borderRadius: 20,
-                      border: "2px solid #D0909A",
-                      background: "linear-gradient(to bottom, #E8B0B8, #D0909A)",
-                      color: "#4A3A3A", fontWeight: 800, fontSize: 13,
+                      border: "2px solid #d4af37",
+                      background: "linear-gradient(to bottom, #3a0d52, #220838)",
+                      color: "#f0d080", fontWeight: 800, fontSize: 13,
                       cursor: saveName.trim() ? "pointer" : "default",
                       opacity: saveName.trim() ? 1 : 0.45,
                       fontFamily: "var(--font-display)",

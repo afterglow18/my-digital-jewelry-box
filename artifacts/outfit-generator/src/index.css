@@ -64,13 +64,13 @@
   --app-font-sans: 'Outfit', sans-serif;
   --app-font-display: 'Syne', sans-serif;
   
-  /* Clueless Palette: Yellow, Bubblegum Pink, Baby Blue, Black, Cream */
+  /* Jewelry Box Palette: Deep Plum, Gold, Cream, Near-Black */
   --background: 45 33% 98%; /* Cream */
   --foreground: 0 0% 9%; /* Almost Black */
   
   --border: 0 0% 9%;
   --input: 0 0% 9%;
-  --ring: 0 0% 9%;
+  --ring: 43 65% 52%;
   
   --card: 0 0% 100%;
   --card-foreground: 0 0% 9%;
@@ -80,17 +80,20 @@
   --popover-foreground: 0 0% 9%;
   --popover-border: 0 0% 9%;
   
-  --primary: 348 52% 80%; /* Warm rose #E8B0B8 */
-  --primary-foreground: 0 13% 18%;
+  --primary: 278 74% 25%; /* Deep Plum #3a0d52 */
+  --primary-foreground: 43 82% 72%; /* Warm Gold #f0d080 */
+  --primary-border: rgba(212,175,55,0.7); /* Gold border */
   
-  --secondary: 348 42% 69%; /* Warm rose deep #D0909A */
-  --secondary-foreground: 0 0% 9%;
+  --secondary: 278 45% 38%; /* Mid Plum */
+  --secondary-foreground: 43 82% 72%; /* Gold text */
+  --secondary-border: rgba(212,175,55,0.4);
   
-  --muted: 0 0% 90%;
-  --muted-foreground: 0 0% 40%;
+  --muted: 280 15% 92%;
+  --muted-foreground: 278 20% 40%;
   
-  --accent: 195 100% 80%; /* Baby Blue */
-  --accent-foreground: 0 0% 9%;
+  --accent: 43 65% 52%; /* Gold #d4af37 */
+  --accent-foreground: 278 74% 15%; /* Deep plum text on gold */
+  --accent-border: rgba(180,140,20,0.6);
   
   --destructive: 0 100% 60%;
   --destructive-foreground: 0 0% 100%;

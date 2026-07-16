@@ -16,10 +16,10 @@ interface Props {
 }
 
 // ── Brand colours — Spin It button palette ───────────────────────────────────
-const ROSE       = "#E8B0B8";   // dusty pink light (Spin It button top)
-const ROSE_DARK  = "#D0909A";   // dusty pink mid (Spin It button bottom / border)
-const ROSE_LIGHT = "#FDF0F3";   // very light tint for selected card bg
-const ROSE_MID   = "#D0909A";   // border / badge colour
+const ROSE       = "#3a0d52";   // plum (button top)
+const ROSE_DARK  = "#220838";   // deep plum (button bottom / border)
+const ROSE_LIGHT = "#f3eeff";   // very light lavender tint for selected card bg
+const ROSE_MID   = "#d4af37";   // gold border / badge colour
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 const FEATURES = [
@@ -98,7 +98,7 @@ export function UpgradeSheet({ onClose }: Props) {
         style={{
           paddingTop: "env(safe-area-inset-top)",
           minHeight: 64,
-          backgroundColor: "#E8B0B8",
+          backgroundColor: "#220838",
           backgroundImage: [
             // horizontal stripes — warm charcoal, softer opacity like app icon plaid
             "repeating-linear-gradient(0deg, transparent 0px, transparent 20px, rgba(60,30,40,0.38) 20px, rgba(60,30,40,0.38) 30px, rgba(255,255,255,0.55) 30px, rgba(255,255,255,0.55) 32px, rgba(60,30,40,0.38) 32px, rgba(60,30,40,0.38) 42px, transparent 42px, transparent 62px)",
@@ -179,7 +179,7 @@ export function UpgradeSheet({ onClose }: Props) {
               style={{
                 position:  "relative",
                 background: active ? ROSE_LIGHT : "white",
-                border:     active ? `2px solid ${ROSE}` : "2px solid #E8D5DF",
+                border:     active ? `2px solid ${ROSE_MID}` : "2px solid #c8b8d8",
                 boxShadow:  active ? `3px 3px 0 ${ROSE}` : "none",
               }}
             >
@@ -231,8 +231,8 @@ export function UpgradeSheet({ onClose }: Props) {
                      text-black transition-all active:translate-y-0.5 active:shadow-none
                      disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
-            background: status === "pending" ? "#D0909A" : "linear-gradient(to bottom, #E8B0B8, #D0909A)",
-            border:     "2.5px solid #D0909A",
+            background: status === "pending" ? ROSE_DARK : `linear-gradient(to bottom, ${ROSE}, ${ROSE_DARK})`,
+            border:     `2.5px solid ${ROSE_MID}`,
             boxShadow:  status === "pending" ? "none" : "3px 3px 0 rgba(0,0,0,0.85)",
             letterSpacing: "0.04em",
           }}
