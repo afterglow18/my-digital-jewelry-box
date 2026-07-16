@@ -14,8 +14,8 @@ type Phase = "closed" | "opening" | "open" | "exiting";
 
 // Total timing (ms)
 const OPEN_DURATION_MS  = 2200;  // lid swing (slow, physical feel)
-const HERO_FADE_IN_MS   = 500;   // hero image fades in after lid opens
-const HERO_SHOW_MS      = 500;   // hero visible at full opacity before exit
+const HERO_FADE_IN_MS   = 1800;  // hero fades in during the lid swing
+const HOLD_AFTER_MS     = 200;   // brief pause once lid is fully open
 const EXIT_DURATION_MS  = 700;   // whole-screen fade-out → jewelry page
 
 interface Props { onEnter: () => void; }
@@ -35,12 +35,14 @@ export default function WelcomePage({ onEnter }: Props) {
     if (phase !== "closed") return;
     setPhase("opening");
 
-    const afterOpen   = OPEN_DURATION_MS;
-    const afterFadeIn = afterOpen + HERO_FADE_IN_MS + HERO_SHOW_MS; // start exit fade
-    const afterExit   = afterFadeIn + EXIT_DURATION_MS;             // call onEnter
+    // Hero fades in immediately as the lid swings — both happen together.
+    setHeroReady(true);
 
-    setTimeout(() => { setPhase("open"); setHeroReady(true); }, afterOpen);
-    setTimeout(() => setPhase("exiting"), afterFadeIn);
+    const afterOpen = OPEN_DURATION_MS + HOLD_AFTER_MS;
+    const afterExit = afterOpen + EXIT_DURATION_MS;
+
+    setTimeout(() => setPhase("open"),    OPEN_DURATION_MS);
+    setTimeout(() => setPhase("exiting"), afterOpen);
     setTimeout(finish,                    afterExit);
   };
 
@@ -109,7 +111,7 @@ export default function WelcomePage({ onEnter }: Props) {
               display: "block",
               userSelect: "none",
               opacity: heroReady ? 1 : 0,
-              transition: `opacity ${HERO_FADE_IN_MS}ms ease-in`,
+              transition: `opacity ${HERO_FADE_IN_MS}ms ease-out`,
             }}
           />
         </div>
