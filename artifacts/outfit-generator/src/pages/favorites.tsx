@@ -1,5 +1,5 @@
 /**
- * FavoritesPage ("My Faves 💕") — every clothing item the user has hearted.
+ * FavoritesPage ("My Faves 💜") — every clothing item the user has hearted.
  * Displays as a 4-column grid with uniform square cards.
  * Items can be dragged to reorder; order is persisted in localStorage.
  * Tap an item to open the full details sheet.
@@ -150,7 +150,7 @@ export default function FavoritesPage() {
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10">
       <header className="mb-5">
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">
-          My Faves 💕
+          My Faves 💜
         </h1>
         <p className="font-medium text-muted-foreground text-sm">
           Saved items. Hold &amp; drag to reorder.
