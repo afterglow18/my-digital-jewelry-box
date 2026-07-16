@@ -368,7 +368,7 @@ export default function WardrobePage() {
             }}
           />
 
-          {/* SAVE button */}
+          {/* Invisible tap zone over the save element on the background image */}
           <button
             onClick={() => { setSaveName(""); setIsSaveOpen(true); }}
             aria-label="Save current look"
@@ -378,18 +378,10 @@ export default function WardrobePage() {
               left:   pX(ir, 0.54)  - pW(ir, 0.0625),
               width:  pW(ir, 0.125), height: pW(ir, 0.125),
               borderRadius: "50%", zIndex: 26,
-              background: "linear-gradient(160deg, #9868ba 0%, #7040a0 100%)",
-              border: "2px solid #d4af37",
-              boxShadow: "0 2px 14px rgba(152,104,186,0.50)",
-              cursor: "pointer",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center",
-              gap: 0, lineHeight: 1.15, padding: 0,
+              background: "transparent", border: "none",
+              cursor: "pointer", padding: 0,
             }}
-          >
-            <span style={{ fontSize: pW(ir, 0.022), fontWeight: 900, color: "#f0d080", letterSpacing: "0.06em", fontFamily: "var(--font-display)" }}>SAVE</span>
-            <span style={{ fontSize: pW(ir, 0.019), fontWeight: 800, color: "#f0d080", letterSpacing: "0.04em", fontFamily: "var(--font-display)" }}>LOOK ✨</span>
-          </button>
+          />
         </>
       )}
 
