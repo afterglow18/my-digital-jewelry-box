@@ -17,32 +17,29 @@ workflows:
       - name: Install dependencies
         script: |
           npm install -g pnpm@11.4.0 --force
-          # Replace workspace config with a CI-safe version:
-          # - No Linux/Replit-only platform exclusions (macOS needs darwin binaries)
-          # - No minimumReleaseAge (not needed in CI)
-          # - onlyBuiltDependencies explicitly listed so pnpm allows their build scripts
-          cat > pnpm-workspace.yaml << 'EOF'
-          packages:
-            - artifacts/*
-            - lib/*
-            - lib/integrations/*
-            - scripts
+          # Patch pnpm-workspace.yaml in-place:
+          # - Remove Linux/Replit-only platform exclusions (darwin binaries are needed on macOS)
+          # - Remove minimumReleaseAge (not needed in CI)
+          # - Keep catalog, packages, onlyBuiltDependencies, allowBuilds, and all other settings
+          python3 - << 'PYEOF'
+          import re
 
-          autoInstallPeers: false
+          with open('pnpm-workspace.yaml', 'r') as f:
+              content = f.read()
 
-          onlyBuiltDependencies:
-            - '@google/genai'
-            - '@swc/core'
-            - esbuild
-            - msw
-            - protobufjs
-            - unrs-resolver
+          # Remove minimumReleaseAge and minimumReleaseAgeExclude blocks
+          content = re.sub(r'minimumReleaseAge:.*?\n', '', content)
+          content = re.sub(r'minimumReleaseAgeExclude:(\n  -[^\n]*)+\n', '', content)
 
-          overrides:
-            "react": "19.1.0"
-            "react-dom": "19.1.0"
-            esbuild: "0.27.3"
-          EOF
+          # Remove lines that exclude platform-specific native binaries
+          # (darwin, linux-arm, win32, etc. — keep only linux-x64 which is not excluded)
+          content = re.sub(r'  "[^"]*>(darwin|linux-arm|linux-loong|linux-mips|linux-ppc|linux-riscv|linux-s390|netbsd|openbsd|sunos|win32|freebsd|android|aix|openharmony|arm64-musl|arm64-gnu|arm-gnu)[^"]*":[^\n]*\n', '', content)
+
+          with open('pnpm-workspace.yaml', 'w') as f:
+              f.write(content)
+
+          print("pnpm-workspace.yaml patched successfully")
+          PYEOF
           pnpm install --no-frozen-lockfile
 
       - name: Build web app
