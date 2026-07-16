@@ -40,7 +40,9 @@ workflows:
 
           print("pnpm-workspace.yaml patched successfully")
           PYEOF
-          pnpm install --no-frozen-lockfile
+          # Delete the Linux-generated lockfile so pnpm resolves fresh for macOS ARM64
+          rm -f pnpm-lock.yaml
+          pnpm install
 
       - name: Build web app
         script: pnpm --filter @workspace/outfit-generator build
