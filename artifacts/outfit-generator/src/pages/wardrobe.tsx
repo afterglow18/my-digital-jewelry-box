@@ -225,6 +225,29 @@ export default function WardrobePage() {
 
       {ready && (
         <>
+          {/* Fancy title at top of background */}
+          <div
+            style={{
+              position: "absolute",
+              top: ir.top + pH(ir, 0.02),
+              left: 0, right: 0,
+              textAlign: "center",
+              zIndex: 20,
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          >
+            <span style={{
+              fontFamily: "'Great Vibes', cursive",
+              fontSize: Math.max(22, pW(ir, 0.115)),
+              color: "#f0d080",
+              textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 0 24px rgba(212,175,55,0.4)",
+              lineHeight: 1,
+            }}>
+              My Digital Jewelry Box
+            </span>
+          </div>
+
           {/* Item-count badge (free tier) */}
           {itemsLeft !== null && (
             <button
