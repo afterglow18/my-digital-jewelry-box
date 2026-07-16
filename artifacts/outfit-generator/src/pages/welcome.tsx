@@ -14,13 +14,16 @@ type Phase = "closed" | "opening" | "open" | "exiting";
 
 // Total timing (ms)
 const OPEN_DURATION_MS  = 1300;  // lid swing
-const HOLD_OPEN_MS      = 600;   // pause at fully open before exit
-const EXIT_DURATION_MS  = 650;   // fade-out
+const HERO_SHOW_MS      = 1000;  // hero image visible after lid opens
+const HERO_FADE_MS      = 600;   // hero cross-fades to empty box
+const HOLD_OPEN_MS      = 400;   // pause after hero fades before full exit
+const EXIT_DURATION_MS  = 650;   // whole-screen fade-out
 
 interface Props { onEnter: () => void; }
 
 export default function WelcomePage({ onEnter }: Props) {
-  const [phase, setPhase] = useState<Phase>("closed");
+  const [phase,      setPhase]      = useState<Phase>("closed");
+  const [heroFaded,  setHeroFaded]  = useState(false);
   const calledRef = useRef(false);
 
   const finish = useCallback(() => {
@@ -33,9 +36,16 @@ export default function WelcomePage({ onEnter }: Props) {
     if (phase !== "closed") return;
     setPhase("opening");
 
-    setTimeout(() => setPhase("open"),    OPEN_DURATION_MS);
-    setTimeout(() => setPhase("exiting"), OPEN_DURATION_MS + HOLD_OPEN_MS);
-    setTimeout(finish,                    OPEN_DURATION_MS + HOLD_OPEN_MS + EXIT_DURATION_MS);
+    const afterOpen   = OPEN_DURATION_MS;
+    const afterHero   = afterOpen + HERO_SHOW_MS;          // start hero fade
+    const afterFade   = afterHero + HERO_FADE_MS;          // hero fully gone
+    const afterHold   = afterFade + HOLD_OPEN_MS;          // start exit fade
+    const afterExit   = afterHold + EXIT_DURATION_MS;      // call onEnter
+
+    setTimeout(() => setPhase("open"),    afterOpen);
+    setTimeout(() => setHeroFaded(true),  afterHero);
+    setTimeout(() => setPhase("exiting"), afterHold);
+    setTimeout(finish,                    afterExit);
   };
 
   const isExiting = phase === "exiting";
@@ -80,7 +90,7 @@ export default function WelcomePage({ onEnter }: Props) {
           perspectiveOrigin: "50% 0%",
         }}
       >
-        {/* ── Interior image (always present behind the lid) ── */}
+        {/* ── Interior layers (always present behind the lid) ── */}
         <div
           style={{
             position: "absolute",
@@ -90,17 +100,39 @@ export default function WelcomePage({ onEnter }: Props) {
             boxShadow: "0 8px 60px rgba(80,0,120,0.7), 0 0 0 2px rgba(212,175,55,0.5)",
           }}
         >
+          {/* Empty jewelry box — always visible underneath */}
           <img
-            src="/jewelry-box-open.jpg"
-            alt="Jewelry box interior"
+            src="/jewelry-box-bg.png"
+            alt=""
             draggable={false}
             style={{
+              position: "absolute",
+              inset: 0,
               width: "100%",
               height: "100%",
               objectFit: "cover",
               objectPosition: "center top",
               display: "block",
               userSelect: "none",
+            }}
+          />
+
+          {/* Hero photo — fades out after 1 s */}
+          <img
+            src="/jewelry-box-open.jpg"
+            alt="Jewelry box interior"
+            draggable={false}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center top",
+              display: "block",
+              userSelect: "none",
+              opacity: heroFaded ? 0 : 1,
+              transition: `opacity ${HERO_FADE_MS}ms ease-in-out`,
             }}
           />
         </div>
