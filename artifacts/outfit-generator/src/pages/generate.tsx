@@ -253,6 +253,30 @@ export default function GeneratePage() {
         background: "rgba(30, 5, 50, 0.12)",
       }} />
 
+      {ready && (
+        <div
+          style={{
+            position: "absolute",
+            top: ir.top + pH(ir, 0.02),
+            left: 0, right: 0,
+            textAlign: "center",
+            zIndex: 20,
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
+          <span style={{
+            fontFamily: "'Great Vibes', cursive",
+            fontSize: Math.min(pH(ir, 0.038), pW(ir, 0.052)),
+            color: "#f0d080",
+            textShadow: "0 2px 12px rgba(0,0,0,0.7), 0 0 24px rgba(212,175,55,0.4)",
+            lineHeight: 1,
+          }}>
+            My Digital Jewelry Box
+          </span>
+        </div>
+      )}
+
       {ready && (() => {
         return (
           <>
