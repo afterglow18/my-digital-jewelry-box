@@ -31,9 +31,9 @@ workflows:
           content = re.sub(r'minimumReleaseAge:.*?\n', '', content)
           content = re.sub(r'minimumReleaseAgeExclude:(\n  -[^\n]*)+\n', '', content)
 
-          # Remove lines that exclude platform-specific native binaries
-          # (darwin, linux-arm, win32, etc. — keep only linux-x64 which is not excluded)
-          content = re.sub(r'  "[^"]*>(darwin|linux-arm|linux-loong|linux-mips|linux-ppc|linux-riscv|linux-s390|netbsd|openbsd|sunos|win32|freebsd|android|aix|openharmony|arm64-musl|arm64-gnu|arm-gnu)[^"]*":[^\n]*\n', '', content)
+          # Remove all platform-exclusion overrides (every exclusion has value "-")
+          # This covers esbuild, rollup, lightningcss, tailwind oxide, expo ngrok, etc.
+          content = re.sub(r'[ \t]+"[^"]+": "-"\n', '', content)
 
           with open('pnpm-workspace.yaml', 'w') as f:
               f.write(content)
