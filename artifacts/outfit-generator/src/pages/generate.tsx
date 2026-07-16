@@ -22,8 +22,8 @@ import { useQueryClient } from "@tanstack/react-query";
 const IMG_W = 1086;
 const IMG_H = 1448;
 const NAV_H = 90;
-const PLUM       = "#3a0d52";
-const PLUM_DARK  = "#220838";
+const PLUM       = "#9868ba";   // icon purple (light)
+const PLUM_DARK  = "#7040a0";   // icon purple (dark)
 const GOLD       = "#d4af37";
 const GOLD_LIGHT = "#f0d080";
 
@@ -390,7 +390,7 @@ export default function GeneratePage() {
                     style={{
                       width: "100%", height: 52, borderRadius: 28,
                       border: "2.5px solid #d4af37",
-                      background: hasItems ? `linear-gradient(to bottom, ${PLUM}, ${PLUM_DARK})` : "rgba(58,13,82,0.32)",
+                      background: hasItems ? `linear-gradient(to bottom, ${PLUM}, ${PLUM_DARK})` : "rgba(100,50,150,0.25)",
                       color: hasItems ? "#4A3A3A" : "#9a6070",
                       fontWeight: 800, fontSize: 16, letterSpacing: "-0.01em",
                       textTransform: "uppercase", whiteSpace: "nowrap",

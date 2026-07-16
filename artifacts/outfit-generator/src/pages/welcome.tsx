@@ -177,19 +177,39 @@ export default function WelcomePage({ onEnter }: Props) {
               }}
             />
 
-            {/* App name */}
+            {/* Logo + App name */}
             <div
               style={{
                 textAlign: "center",
                 padding: "0 32px",
                 zIndex: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 12,
               }}
             >
+              {/* Ring icon logo */}
+              <div style={{
+                width: "clamp(72px, 20vw, 96px)",
+                height: "clamp(72px, 20vw, 96px)",
+                borderRadius: 20,
+                overflow: "hidden",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.6), 0 0 0 2px rgba(212,175,55,0.5)",
+              }}>
+                <img
+                  src="/app-icon.jpg"
+                  alt="My Digital Jewelry Box"
+                  draggable={false}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+              </div>
+
               <div
                 style={{
                   fontFamily: "Georgia, 'Times New Roman', serif",
                   fontWeight: 700,
-                  fontSize: "clamp(22px, 7vw, 32px)",
+                  fontSize: "clamp(20px, 6vw, 28px)",
                   letterSpacing: "0.06em",
                   color: "#f0d080",
                   textShadow:
@@ -203,7 +223,6 @@ export default function WelcomePage({ onEnter }: Props) {
               </div>
               <div
                 style={{
-                  marginTop: 8,
                   fontSize: 10,
                   fontWeight: 500,
                   letterSpacing: "0.28em",

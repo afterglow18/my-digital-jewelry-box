@@ -16,8 +16,8 @@ interface Props {
 }
 
 // ── Brand colours — Spin It button palette ───────────────────────────────────
-const ROSE       = "#3a0d52";   // plum (button top)
-const ROSE_DARK  = "#220838";   // deep plum (button bottom / border)
+const ROSE       = "#9868ba";   // icon purple (button top)
+const ROSE_DARK  = "#7040a0";   // icon purple dark (button bottom)
 const ROSE_LIGHT = "#f3eeff";   // very light lavender tint for selected card bg
 const ROSE_MID   = "#d4af37";   // gold border / badge colour
 
@@ -98,21 +98,24 @@ export function UpgradeSheet({ onClose }: Props) {
         style={{
           paddingTop: "env(safe-area-inset-top)",
           minHeight: 64,
-          backgroundColor: "#220838",
+          backgroundColor: "#7040a0",
           backgroundImage: [
-            // horizontal stripes — warm charcoal, softer opacity like app icon plaid
-            "repeating-linear-gradient(0deg, transparent 0px, transparent 20px, rgba(60,30,40,0.38) 20px, rgba(60,30,40,0.38) 30px, rgba(255,255,255,0.55) 30px, rgba(255,255,255,0.55) 32px, rgba(60,30,40,0.38) 32px, rgba(60,30,40,0.38) 42px, transparent 42px, transparent 62px)",
+            // horizontal stripes — matching app icon plaid pattern
+            "repeating-linear-gradient(0deg, transparent 0px, transparent 20px, rgba(20,0,40,0.38) 20px, rgba(20,0,40,0.38) 30px, rgba(255,255,255,0.45) 30px, rgba(255,255,255,0.45) 32px, rgba(20,0,40,0.38) 32px, rgba(20,0,40,0.38) 42px, transparent 42px, transparent 62px)",
             // vertical stripes
-            "repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(60,30,40,0.38) 20px, rgba(60,30,40,0.38) 30px, rgba(255,255,255,0.55) 30px, rgba(255,255,255,0.55) 32px, rgba(60,30,40,0.38) 32px, rgba(60,30,40,0.38) 42px, transparent 42px, transparent 62px)",
+            "repeating-linear-gradient(90deg, transparent 0px, transparent 20px, rgba(20,0,40,0.38) 20px, rgba(20,0,40,0.38) 30px, rgba(255,255,255,0.45) 30px, rgba(255,255,255,0.45) 32px, rgba(20,0,40,0.38) 32px, rgba(20,0,40,0.38) 42px, transparent 42px, transparent 62px)",
           ].join(", "),
         }}
       >
-        <span
-          className="text-4xl leading-none"
-          style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.35))" }}
-        >
-          💄
-        </span>
+        <div style={{
+          width: 56, height: 56, borderRadius: 12,
+          overflow: "hidden",
+          boxShadow: "0 3px 12px rgba(0,0,0,0.5), 0 0 0 2px rgba(212,175,55,0.5)",
+          filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.35))",
+        }}>
+          <img src="/app-icon.jpg" alt="My Digital Jewelry Box"
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
         <button
           onClick={onClose}
           style={{ top: "calc(env(safe-area-inset-top) + 10px)" }}
