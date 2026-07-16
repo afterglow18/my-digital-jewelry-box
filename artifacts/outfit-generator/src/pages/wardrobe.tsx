@@ -375,7 +375,7 @@ export default function WardrobePage() {
             style={{
               position: "absolute",
               top:    pY(ir, 0.9466) - pW(ir, 0.0625),
-              left:   pX(ir, 0.491)  - pW(ir, 0.0625),
+              left:   pX(ir, 0.54)  - pW(ir, 0.0625),
               width:  pW(ir, 0.125), height: pW(ir, 0.125),
               borderRadius: "50%", zIndex: 26,
               background: "linear-gradient(160deg, #9868ba 0%, #7040a0 100%)",
