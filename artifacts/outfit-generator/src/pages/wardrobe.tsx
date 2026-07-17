@@ -312,19 +312,6 @@ export default function WardrobePage() {
 
                 {/* Carousel — starts immediately below heading, same height every row */}
                 {items.length > 0 && (
-                  <>
-                  {/* Dark backdrop behind the centre slot only */}
-                  <div style={{
-                    position: "absolute",
-                    top: secTop + labelH,
-                    left: carLeft + carW / 3,
-                    width: carW / 3,
-                    height: consistentPhotoH,
-                    background: "rgba(22, 5, 32, 0.82)",
-                    borderRadius: 14,
-                    zIndex: 9,
-                    pointerEvents: "none",
-                  }} />
                   <div
                     data-testid={`row-${key}`}
                     style={{
@@ -342,7 +329,6 @@ export default function WardrobePage() {
                       maxPhotoH={consistentPhotoH}
                     />
                   </div>
-                  </>
                 )}
 
                 {/* Empty-state tap zone — full section, only when no items */}
