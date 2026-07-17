@@ -107,7 +107,7 @@ export default function WelcomePage({ onEnter }: Props) {
               width: "100%",
               height: "100%",
               objectFit: "cover",
-              objectPosition: "center top",
+              objectPosition: "center 30%",
               display: "block",
               userSelect: "none",
               opacity: heroReady ? 1 : 0,
