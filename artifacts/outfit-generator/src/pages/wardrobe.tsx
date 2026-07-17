@@ -48,8 +48,8 @@ const LABEL_FRAC = 0.042;
 // All four sections are ~16-18% tall so photos render at the same size.
 // Row 1 → LED + velvet roll; Rows 2-4 → the three open shelf bays.
 const LM = {
-  doorL: 0.06,
-  doorR: 0.94,
+  doorL: 0.12,
+  doorR: 0.88,
   rows: [
     { sectionTop: 0.16, shelfY: 0.34 },
     { sectionTop: 0.34, shelfY: 0.51 },
@@ -229,7 +229,7 @@ export default function WardrobePage() {
           <div
             style={{
               position: "absolute",
-              top: `calc(${ir.top + pH(ir, 0.02)}px + env(safe-area-inset-top))`,
+              top: `calc(${ir.top + pH(ir, 0.005)}px + env(safe-area-inset-top))`,
               left: 0, right: 0,
               textAlign: "center",
               zIndex: 20,
