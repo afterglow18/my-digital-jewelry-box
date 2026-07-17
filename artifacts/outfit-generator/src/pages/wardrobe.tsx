@@ -351,9 +351,9 @@ export default function WardrobePage() {
             data-testid="button-person-icon"
             aria-label="View saved looks"
             style={{
-              position: "absolute", top: pY(ir, 0.905), left: pX(ir, 0.140),
-              width: pW(ir, 0.110), height: pH(ir, 0.065),
-              zIndex: 25, background: "rgba(255,0,0,0.35)", border: "none", cursor: "pointer",
+              position: "absolute", top: pY(ir, 0.905), left: pX(ir, 0.190),
+              width: pW(ir, 0.120), height: pH(ir, 0.065),
+              zIndex: 25, background: "transparent", border: "none", cursor: "pointer",
             }}
           />
 
