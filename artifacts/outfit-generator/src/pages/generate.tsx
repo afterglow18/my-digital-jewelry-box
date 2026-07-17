@@ -46,11 +46,11 @@ const LM = {
 } as const;
 
 interface ImgRect {
-  top: number; left: number; width: number; height: number; containerH: number;
+  top: number; left: number; width: number; height: number; containerH: number; containerW: number;
 }
 
 function useImageRect(ref: RefObject<HTMLDivElement>): ImgRect {
-  const [rect, setRect] = useState<ImgRect>({ top: 0, left: 0, width: 0, height: 0, containerH: 0 });
+  const [rect, setRect] = useState<ImgRect>({ top: 0, left: 0, width: 0, height: 0, containerH: 0, containerW: 0 });
   useEffect(() => {
     const compute = () => {
       const c = ref.current;
@@ -61,7 +61,7 @@ function useImageRect(ref: RefObject<HTMLDivElement>): ImgRect {
       const scale = Math.max(cW / IMG_W, cH / IMG_H);
       const rW = IMG_W * scale, rH = IMG_H * scale;
       const rL = (cW - rW) / 2, rT = (cH - rH) / 2;
-      setRect({ top: rT, left: rL, width: rW, height: rH, containerH: cH });
+      setRect({ top: rT, left: rL, width: rW, height: rH, containerH: cH, containerW: cW });
     };
     compute();
     window.addEventListener("resize", compute);
@@ -215,8 +215,9 @@ export default function GeneratePage() {
   const labelH           = ready ? pH(ir, LABEL_FRAC) : 0;
   const minSecH          = ready ? Math.min(...LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))) : 0;
   const consistentPhotoH = Math.max(0, minSecH - labelH);
-  const carLeft          = ready ? pX(ir, LM.doorL) : 0;
-  const carW             = ready ? pW(ir, LM.doorR - LM.doorL) : 0;
+  const INSET   = ready ? ir.containerW * 0.10 : 0;
+  const carLeft = ready ? INSET : 0;
+  const carW    = ready ? ir.containerW - INSET * 2 : 0;
 
   return (
     <div
