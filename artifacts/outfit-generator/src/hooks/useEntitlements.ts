@@ -1,18 +1,27 @@
 /**
  * useEntitlements — entitlement hook backed by RevenueCat.
  *
- * Tier is persisted in localStorage as a fast-read cache and kept in sync
- * after every purchase / restore.  The authoritative source is RevenueCat.
+ * The authoritative source is always RevenueCat's CustomerInfo.
+ * localStorage is used only as a fast-read cache for the UI while the
+ * live check completes. It is never the sole source of truth.
+ *
+ * Sync triggers:
+ *  - App launch          → syncWithRevenueCat() called from App.tsx
+ *  - Foreground return   → syncWithRevenueCat() called from App.tsx visibilitychange
+ *  - After purchase      → customerInfo from purchasePackage response used directly
+ *  - After restore       → customerInfo from restorePurchases response used directly
+ *  - Refund / expiry     → next sync sets tier back to 'free' automatically
  */
 
 import { useCallback, useSyncExternalStore } from 'react';
 import { Purchases } from '@revenuecat/purchases-capacitor';
 import type { Tier, TierCapabilities, PurchaseProduct } from '@/types/local';
-import { TIER_CAPS, PRODUCT_TIER } from '@/types/local';
+import { TIER_CAPS } from '@/types/local';
 import {
   ENTITLEMENT_ID,
-  PRODUCT_TIER_MAP,
   getPackageForProduct,
+  deriveStateFromCustomerInfo,
+  fetchEntitlementState,
   restoreAndCheck,
 } from '@/lib/revenuecat';
 
@@ -39,6 +48,8 @@ export function readStoredProduct(): PurchaseProduct | null {
   return null;
 }
 
+// Initialise from cache so the UI is instant on load; syncWithRevenueCat()
+// will correct it as soon as the SDK responds.
 let _currentTier: Tier = readStoredTier();
 const _subscribers = new Set<() => void>();
 
@@ -51,14 +62,37 @@ function getTierSnapshot(): Tier {
   return _currentTier;
 }
 
-/** Promote the tier globally and persist. Called after a successful purchase. */
+/** Update the global tier, persist to cache, and notify all subscribers. */
 export function setGlobalTier(t: Tier, product?: PurchaseProduct): void {
   try {
     localStorage.setItem(STORAGE_KEY, t);
-    if (product) localStorage.setItem(STORAGE_PRODUCT_KEY, product);
+    if (product) {
+      localStorage.setItem(STORAGE_PRODUCT_KEY, product);
+    } else if (t === 'free') {
+      localStorage.removeItem(STORAGE_PRODUCT_KEY);
+    }
   } catch {}
   _currentTier = t;
   _subscribers.forEach((fn) => fn());
+}
+
+/**
+ * Fetch live CustomerInfo from RevenueCat and sync the global tier.
+ *
+ * - If RC confirms no active entitlement → downgrades to 'free'.
+ * - If the RC call fails (network error, SDK not yet ready) → keeps the
+ *   existing cached tier and logs a warning. We never downgrade on a
+ *   network failure; only on an explicit "not active" response.
+ */
+export async function syncWithRevenueCat(): Promise<void> {
+  try {
+    const { tier, product } = await fetchEntitlementState();
+    setGlobalTier(tier, product ?? undefined);
+    console.log('[RevenueCat] Sync complete — tier:', tier);
+  } catch (err) {
+    // SDK not configured, offline, or sandbox — keep cached tier.
+    console.warn('[RevenueCat] Sync failed, keeping cached tier:', err);
+  }
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -94,15 +128,17 @@ export function useEntitlements() {
 
         const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
 
-        if (ENTITLEMENT_ID in (customerInfo.entitlements?.active ?? {})) {
-          const newTier: Tier = PRODUCT_TIER_MAP[product] ?? PRODUCT_TIER[product] ?? 'unlock';
-          setGlobalTier(newTier, product);
+        // Derive tier directly from the purchase response — no extra network call.
+        const { tier: newTier, product: newProduct } = deriveStateFromCustomerInfo(customerInfo);
+
+        if (newTier !== 'free') {
+          setGlobalTier(newTier, newProduct ?? undefined);
           return 'success';
         }
 
+        // Entitlement not active in response — treat as cancelled / pending.
         return 'cancelled';
       } catch (err: any) {
-        // userCancelled is thrown as an error by the SDK
         if (err?.code === 'PURCHASE_CANCELLED' || err?.userCancelled === true) {
           return 'cancelled';
         }
@@ -115,11 +151,13 @@ export function useEntitlements() {
 
   const restore = useCallback(async (): Promise<PurchaseResult> => {
     try {
-      const active = await restoreAndCheck();
-      if (active) {
-        setGlobalTier('unlock');
+      const { tier: restoredTier, product: restoredProduct } = await restoreAndCheck();
+      if (restoredTier !== 'free') {
+        setGlobalTier(restoredTier, restoredProduct ?? undefined);
         return 'success';
       }
+      // No active entitlement after restore — ensure tier is cleared.
+      setGlobalTier('free');
       return 'cancelled';
     } catch (err) {
       console.error('[RevenueCat] Restore error:', err);

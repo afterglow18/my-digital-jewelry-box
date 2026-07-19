@@ -6,7 +6,11 @@
  * Packages:    $rc_monthly | $rc_annual | $rc_lifetime
  */
 import { Purchases } from "@revenuecat/purchases-capacitor";
-import type { PurchasesPackage, PurchasesOfferings } from "@revenuecat/purchases-capacitor";
+import type {
+  PurchasesPackage,
+  PurchasesOfferings,
+  CustomerInfo,
+} from "@revenuecat/purchases-capacitor";
 import type { PurchaseProduct, Tier } from "@/types/local";
 
 const TEST_KEY = import.meta.env.VITE_REVENUECAT_TEST_API_KEY as string;
@@ -60,19 +64,55 @@ export async function getPackageForProduct(
   const current = offerings.current;
   if (!current) return null;
   return (
-    current.availablePackages.find((p: PurchasesPackage) => p.packageType === pkgId || p.identifier === pkgId) ??
-    null
+    current.availablePackages.find(
+      (p: PurchasesPackage) => p.packageType === pkgId || p.identifier === pkgId,
+    ) ?? null
   );
 }
 
-/** Check whether the user currently has the "unlock" entitlement active. */
-export async function getActiveEntitlement(): Promise<boolean> {
-  const { customerInfo } = await Purchases.getCustomerInfo();
-  return ENTITLEMENT_ID in (customerInfo.entitlements?.active ?? {});
+/**
+ * Derive the app tier + product from a live CustomerInfo snapshot.
+ * Returns { tier: 'free', product: null } when the entitlement is inactive.
+ */
+export function deriveStateFromCustomerInfo(
+  customerInfo: CustomerInfo,
+): { tier: Tier; product: PurchaseProduct | null } {
+  const activeEnt = (customerInfo.entitlements?.active ?? {})[ENTITLEMENT_ID];
+  if (!activeEnt) return { tier: "free", product: null };
+
+  const prodId = activeEnt.productIdentifier ?? "";
+
+  // Match known App Store product IDs and RC package types
+  let product: PurchaseProduct = "lifetime"; // safe default
+  if (/monthly/i.test(prodId) || prodId === "$rc_monthly") {
+    product = "monthly";
+  } else if (/annual|yearly/i.test(prodId) || prodId === "$rc_annual") {
+    product = "yearly";
+  } else if (/lifetime/i.test(prodId) || prodId === "$rc_lifetime") {
+    product = "lifetime";
+  }
+
+  const tier = PRODUCT_TIER_MAP[product] ?? "unlock";
+  return { tier, product };
 }
 
-/** Restore previous purchases and return whether "unlock" is now active. */
-export async function restoreAndCheck(): Promise<boolean> {
+/**
+ * Fetch live CustomerInfo from RevenueCat and derive entitlement state.
+ * Throws if the SDK call fails — callers should handle gracefully.
+ */
+export async function fetchEntitlementState(): Promise<{
+  tier: Tier;
+  product: PurchaseProduct | null;
+}> {
+  const { customerInfo } = await Purchases.getCustomerInfo();
+  return deriveStateFromCustomerInfo(customerInfo);
+}
+
+/** Restore previous purchases and return derived entitlement state. */
+export async function restoreAndCheck(): Promise<{
+  tier: Tier;
+  product: PurchaseProduct | null;
+}> {
   const { customerInfo } = await Purchases.restorePurchases();
-  return ENTITLEMENT_ID in (customerInfo.entitlements?.active ?? {});
+  return deriveStateFromCustomerInfo(customerInfo);
 }

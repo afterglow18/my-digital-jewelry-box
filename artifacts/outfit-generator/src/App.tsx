@@ -9,8 +9,9 @@ import BackupPage from './pages/backup';
 import WelcomePage from './pages/welcome';
 import { LockedScreen } from './components/LockedScreen';
 import { queryClient } from '@/lib/queryClient';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { initRevenueCat } from '@/lib/revenuecat';
+import { syncWithRevenueCat } from '@/hooks/useEntitlements';
 import { useBiometricLock } from '@/hooks/useBiometricLock';
 import { BiometricLockContext } from '@/contexts/BiometricLockContext';
 import { AnimatePresence } from 'framer-motion';
@@ -50,6 +51,24 @@ function AppShell() {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
   const [entered, setEntered] = useState<boolean>(() => isPreview);
   const { enabled, isLocked, authenticate, enableLock, disableLock } = useBiometricLock();
+
+  // Sync entitlements from RevenueCat on launch and every time the app
+  // returns to the foreground. This ensures refunded or expired purchases
+  // are reflected automatically without relying on the local cache.
+  useEffect(() => {
+    syncWithRevenueCat();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncWithRevenueCat();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   return (
     <BiometricLockContext.Provider value={{ enabled, enableLock, disableLock }}>
