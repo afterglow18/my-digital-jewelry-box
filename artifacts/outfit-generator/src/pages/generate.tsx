@@ -215,9 +215,8 @@ export default function GeneratePage() {
   const labelH           = ready ? pH(ir, LABEL_FRAC) : 0;
   const minSecH          = ready ? Math.min(...LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))) : 0;
   const consistentPhotoH = Math.max(0, minSecH - labelH);
-  const INSET   = ready ? ir.containerW * 0.10 : 0;
-  const carLeft = ready ? INSET : 0;
-  const carW    = ready ? ir.containerW - INSET * 2 : 0;
+  const carLeft = ready ? pX(ir, LM.doorL) : 0;
+  const carW    = ready ? pW(ir, LM.doorR - LM.doorL) : 0;
 
   return (
     <div
