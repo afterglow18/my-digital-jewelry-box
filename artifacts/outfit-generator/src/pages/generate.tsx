@@ -289,6 +289,30 @@ export default function GeneratePage() {
 
               return (
                 <React.Fragment key={key}>
+                  {/* MATCHMAKER title — only above the rings row */}
+                  {rowIdx === 0 && (
+                    <div style={{
+                      position: "absolute",
+                      top: secTop - labelH * 1.1,
+                      left: carLeft, width: carW,
+                      textAlign: "center",
+                      zIndex: 20,
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}>
+                      <span style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: Math.max(10, labelH * 0.65),
+                        fontWeight: 700,
+                        letterSpacing: "0.28em",
+                        color: "#f0d080",
+                        textShadow: "0 2px 10px rgba(0,0,0,0.6), 0 0 20px rgba(212,175,55,0.35)",
+                        textTransform: "uppercase",
+                      }}>
+                        Matchmaker
+                      </span>
+                    </div>
+                  )}
                   {/* Heading — anchored to top of section */}
                   <div style={{
                     position: "absolute", top: secTop, left: carLeft,
