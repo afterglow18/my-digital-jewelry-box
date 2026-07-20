@@ -33,8 +33,8 @@ const LABEL_FRAC = 0.042;
 // Layout markers calibrated for jewelry-box-bg.png (1086×1448).
 // All four sections are ~16-18% tall so photos render at the same size.
 const LM = {
-  doorL: 0.06,
-  doorR: 0.94,
+  doorL: 0.12,
+  doorR: 0.88,
   rows: [
     { sectionTop: 0.16, shelfY: 0.34 },
     { sectionTop: 0.34, shelfY: 0.51 },
