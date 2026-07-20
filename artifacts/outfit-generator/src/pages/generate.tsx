@@ -310,14 +310,14 @@ export default function GeneratePage() {
                     <div style={{
                       position: "absolute",
                       top: secTop + labelH, left: carLeft,
-                      width: carW, height: consistentPhotoH,
+                      width: carW, height: rowIdx === 0 ? consistentPhotoH * 0.90 : consistentPhotoH,
                       zIndex: 10, overflow: "visible",
                     }}>
                       <ClosetRow
                         ref={rowRefs[key]}
                         items={items}
                         onCenteredItem={setCentredHandlers[key]}
-                        maxPhotoH={consistentPhotoH}
+                        maxPhotoH={rowIdx === 0 ? consistentPhotoH * 0.90 : consistentPhotoH}
                         disableSwipe
                       />
                     </div>
