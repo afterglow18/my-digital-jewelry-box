@@ -314,7 +314,7 @@ export default function WardrobePage() {
                     style={{
                       position: "absolute",
                       top: secTop + labelH, left: carLeft,
-                      width: carW, height: consistentPhotoH,
+                      width: carW, height: rowIdx === 0 ? consistentPhotoH * 0.90 : consistentPhotoH,
                       zIndex: 10, overflow: "visible",
                     }}
                   >
@@ -323,7 +323,7 @@ export default function WardrobePage() {
                       items={items}
                       onCenteredItem={setCentredHandlers[key]}
                       onItemTap={handleItemTap}
-                      maxPhotoH={consistentPhotoH}
+                      maxPhotoH={rowIdx === 0 ? consistentPhotoH * 0.90 : consistentPhotoH}
                     />
                   </div>
                 )}
