@@ -128,7 +128,7 @@ export function useEntitlements() {
 
         const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
 
-        // Derive tier directly from the purchase response — no extra network call.
+        // Try the immediate response first.
         const { tier: newTier, product: newProduct } = deriveStateFromCustomerInfo(customerInfo);
 
         if (newTier !== 'free') {
@@ -136,7 +136,18 @@ export function useEntitlements() {
           return 'success';
         }
 
-        // Entitlement not active in response — treat as cancelled / pending.
+        // Entitlement not in the immediate response — RevenueCat sometimes needs
+        // a moment to verify the receipt with Apple. Do a follow-up fetch to get
+        // the confirmed state before giving up.
+        console.log('[RevenueCat] Entitlement not in purchase response — re-fetching...');
+        const { tier: syncedTier, product: syncedProduct } = await fetchEntitlementState();
+
+        if (syncedTier !== 'free') {
+          setGlobalTier(syncedTier, syncedProduct ?? undefined);
+          return 'success';
+        }
+
+        // Still not active — treat as pending / cancelled.
         return 'cancelled';
       } catch (err: any) {
         if (err?.code === 'PURCHASE_CANCELLED' || err?.userCancelled === true) {
