@@ -68,6 +68,7 @@ export function UpgradeSheet({ onClose }: Props) {
   const { purchase, restore } = useEntitlements();
   const [selected, setSelected]   = useState<PurchaseProduct>("lifetime");
   const [status, setStatus]       = useState<"idle" | "pending" | "restoring">("idle");
+  const [errorMsg, setErrorMsg]   = useState<string | null>(null);
 
   const handleRestore = useCallback(async () => {
     if (status !== "idle") return;
@@ -89,11 +90,16 @@ export function UpgradeSheet({ onClose }: Props) {
   const handlePurchase = useCallback(async () => {
     if (status === "pending") return;
     setStatus("pending");
+    setErrorMsg(null);
     const result: PurchaseResult = await purchase(selected);
     if (result === "success") {
       onClose();
-    } else {
+    } else if (result === "cancelled") {
       setStatus("idle");
+    } else {
+      // "unavailable" — SDK not ready, products not configured, or network error
+      setStatus("idle");
+      setErrorMsg("Purchase unavailable. Check your connection and try again.");
     }
   }, [status, purchase, selected, onClose]);
 
@@ -242,6 +248,14 @@ export function UpgradeSheet({ onClose }: Props) {
         className="px-5 flex flex-col gap-2.5 flex-shrink-0 mt-auto"
         style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
       >
+        {/* Error feedback */}
+        {errorMsg && (
+          <p className="text-xs font-semibold text-center px-2 py-2 rounded-xl"
+             style={{ background: "rgba(220,38,38,0.1)", color: "#dc2626" }}>
+            {errorMsg}
+          </p>
+        )}
+
         <button
           onClick={handlePurchase}
           disabled={status === "pending"}
