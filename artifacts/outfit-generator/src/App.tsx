@@ -16,12 +16,10 @@ import { useBiometricLock } from '@/hooks/useBiometricLock';
 import { BiometricLockContext } from '@/contexts/BiometricLockContext';
 import { AnimatePresence } from 'framer-motion';
 
-// Initialise RevenueCat as early as possible
-try {
-  initRevenueCat();
-} catch (e) {
-  console.error('[RevenueCat] Init failed:', e);
-}
+// Kick off RevenueCat configuration as early as possible.
+// initRevenueCat() returns a Promise — fire it now so configure() has
+// maximum time to finish before the first purchase attempt.
+initRevenueCat().catch((e) => console.error('[RevenueCat] Init failed:', e));
 
 function NotFound() {
   return (
@@ -56,7 +54,9 @@ function AppShell() {
   // returns to the foreground. This ensures refunded or expired purchases
   // are reflected automatically without relying on the local cache.
   useEffect(() => {
-    syncWithRevenueCat();
+    // Await SDK configuration before the first sync so we don't query
+    // CustomerInfo before Purchases.configure() has resolved.
+    initRevenueCat().then(() => syncWithRevenueCat());
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

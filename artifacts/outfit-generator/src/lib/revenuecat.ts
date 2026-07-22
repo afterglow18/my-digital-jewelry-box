@@ -34,31 +34,40 @@ export const PRODUCT_TIER_MAP: Record<PurchaseProduct, Tier> = {
   premium:  "premium",
 };
 
-let _initialised = false;
+// Resolves when configure() completes (or immediately if no key is available).
+// All SDK calls must await this before proceeding.
+let _configuredPromise: Promise<void> | null = null;
 
-export function initRevenueCat() {
-  if (_initialised) return;
-  _initialised = true;
+export function initRevenueCat(): Promise<void> {
+  if (_configuredPromise) return _configuredPromise;
 
   // In browser / dev → use test store key; in native iOS → use App Store key.
-  // Capacitor automatically handles web vs native context.
   const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
   const apiKey   = isNative ? (IOS_KEY ?? TEST_KEY) : (TEST_KEY ?? IOS_KEY);
 
   if (!apiKey) {
     console.warn("[RevenueCat] No API key found — purchases disabled");
-    return;
+    _configuredPromise = Promise.resolve();
+    return _configuredPromise;
   }
 
-  Purchases.configure({ apiKey })
+  _configuredPromise = Purchases.configure({ apiKey })
     .then(() => console.log("[RevenueCat] Configured"))
     .catch((e: unknown) => console.error("[RevenueCat] Configure error:", e));
+
+  return _configuredPromise;
+}
+
+/** Await SDK readiness before making any Purchases.* call. */
+async function awaitConfigured(): Promise<void> {
+  if (_configuredPromise) await _configuredPromise;
 }
 
 /** Fetch the current offering and find the package for a given product. */
 export async function getPackageForProduct(
   product: PurchaseProduct,
 ): Promise<PurchasesPackage | null> {
+  await awaitConfigured();
   const pkgId = PACKAGE_ID[product];
   const offerings: PurchasesOfferings = await Purchases.getOfferings();
   const current = offerings.current;
@@ -104,6 +113,7 @@ export async function fetchEntitlementState(): Promise<{
   tier: Tier;
   product: PurchaseProduct | null;
 }> {
+  await awaitConfigured();
   const { customerInfo } = await Purchases.getCustomerInfo();
   return deriveStateFromCustomerInfo(customerInfo);
 }
@@ -113,6 +123,7 @@ export async function restoreAndCheck(): Promise<{
   tier: Tier;
   product: PurchaseProduct | null;
 }> {
+  await awaitConfigured();
   const { customerInfo } = await Purchases.restorePurchases();
   return deriveStateFromCustomerInfo(customerInfo);
 }
