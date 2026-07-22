@@ -19,6 +19,7 @@ import type { Tier, TierCapabilities, PurchaseProduct } from '@/types/local';
 import { TIER_CAPS } from '@/types/local';
 import {
   ENTITLEMENT_ID,
+  PRODUCT_TIER_MAP,
   getPackageForProduct,
   deriveStateFromCustomerInfo,
   fetchEntitlementState,
@@ -128,7 +129,8 @@ export function useEntitlements() {
 
         const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
 
-        // Try the immediate response first.
+        // purchasePackage resolved without throwing = Apple approved the purchase.
+        // Try RC's confirmed entitlement state first.
         const { tier: newTier, product: newProduct } = deriveStateFromCustomerInfo(customerInfo);
 
         if (newTier !== 'free') {
@@ -136,19 +138,21 @@ export function useEntitlements() {
           return 'success';
         }
 
-        // Entitlement not in the immediate response — RevenueCat sometimes needs
-        // a moment to verify the receipt with Apple. Do a follow-up fetch to get
-        // the confirmed state before giving up.
-        console.log('[RevenueCat] Entitlement not in purchase response — re-fetching...');
-        const { tier: syncedTier, product: syncedProduct } = await fetchEntitlementState();
+        // RC hasn't processed the receipt yet (verification lag).
+        // Set the tier optimistically from what was purchased so the UI
+        // updates immediately. The next syncWithRevenueCat call will confirm.
+        const optimisticTier = PRODUCT_TIER_MAP[product] ?? 'unlock';
+        setGlobalTier(optimisticTier, product);
+        console.log('[RevenueCat] Set tier optimistically:', optimisticTier, product);
 
-        if (syncedTier !== 'free') {
-          setGlobalTier(syncedTier, syncedProduct ?? undefined);
-          return 'success';
-        }
+        // Background sync to replace optimistic state with confirmed state.
+        fetchEntitlementState()
+          .then(({ tier: t, product: p }) => {
+            if (t !== 'free') setGlobalTier(t, p ?? undefined);
+          })
+          .catch(() => { /* keep optimistic */ });
 
-        // Still not active — treat as pending / cancelled.
-        return 'cancelled';
+        return 'success';
       } catch (err: any) {
         if (err?.code === 'PURCHASE_CANCELLED' || err?.userCancelled === true) {
           return 'cancelled';
