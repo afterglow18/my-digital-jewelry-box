@@ -191,29 +191,11 @@ export default function AccountPage() {
               </span>
             </div>
 
-            {/* Upgrade button on free; purchased plan label on unlock */}
-            {tier === 'free' ? (
+            {/* Upgrade button (hidden if already premium) */}
+            {tier !== 'premium' && (
               <PurpleButton onClick={() => setShowUpgrade(true)}>
                 Lifetime Unlock – $9.99
               </PurpleButton>
-            ) : (
-              <div
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl
-                           border-2 font-black text-sm uppercase tracking-wide text-white"
-                style={{
-                  background: 'linear-gradient(to bottom, #9868ba, #7040a0)',
-                  border: '2.5px solid #d4af37',
-                  boxShadow: '3px 3px 0 rgba(0,0,0,0.85)',
-                  letterSpacing: '0.07em',
-                }}
-              >
-                ✓{' '}
-                {activeProduct === 'monthly'
-                  ? 'Monthly Unlocked'
-                  : activeProduct === 'yearly'
-                  ? 'Annual Unlocked'
-                  : 'Lifetime Unlocked'}
-              </div>
             )}
 
             {/* Restore purchases */}
