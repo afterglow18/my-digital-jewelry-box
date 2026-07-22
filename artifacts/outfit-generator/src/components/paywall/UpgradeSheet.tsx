@@ -65,9 +65,24 @@ const PLANS: Plan[] = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function UpgradeSheet({ onClose }: Props) {
-  const { purchase } = useEntitlements();
-  const [selected, setSelected] = useState<PurchaseProduct>("lifetime");
-  const [status, setStatus]     = useState<"idle" | "pending">("idle");
+  const { purchase, restore } = useEntitlements();
+  const [selected, setSelected]   = useState<PurchaseProduct>("lifetime");
+  const [status, setStatus]       = useState<"idle" | "pending" | "restoring">("idle");
+
+  const handleRestore = useCallback(async () => {
+    if (status !== "idle") return;
+    setStatus("restoring");
+    const result = await restore();
+    if (result === "success") {
+      onClose();
+    } else {
+      setStatus("idle");
+    }
+  }, [status, restore, onClose]);
+
+  const openUrl = (url: string) => {
+    window.open(url, "_blank", "noreferrer");
+  };
 
   const selectedPlan = PLANS.find(p => p.id === selected)!;
 
@@ -256,6 +271,36 @@ export function UpgradeSheet({ onClose }: Props) {
         >
           Maybe Later
         </button>
+
+        {/* Restore Purchases */}
+        <button
+          onClick={handleRestore}
+          disabled={status !== "idle"}
+          className="text-xs font-semibold text-black/40 text-center
+                     underline underline-offset-2 hover:text-black/60 transition-colors
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {status === "restoring" ? "Restoring…" : "Restore Purchases"}
+        </button>
+
+        {/* Legal links — required by Apple */}
+        <div className="flex items-center justify-center gap-3 pb-1">
+          <button
+            onClick={() => openUrl("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")}
+            className="text-[10px] text-black/30 underline underline-offset-2
+                       hover:text-black/50 transition-colors"
+          >
+            Terms of Use
+          </button>
+          <span className="text-[10px] text-black/20">·</span>
+          <button
+            onClick={() => openUrl("https://app.notion.com/p/My-Digital-Collection-Privacy-Policy-39682db6065380b19dedcb108d4a0ef4?source=copy_link")}
+            className="text-[10px] text-black/30 underline underline-offset-2
+                       hover:text-black/50 transition-colors"
+          >
+            Privacy Policy
+          </button>
+        </div>
       </div>
     </motion.div>
   );
