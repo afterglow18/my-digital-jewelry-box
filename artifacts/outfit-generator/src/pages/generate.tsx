@@ -17,11 +17,11 @@ import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ClosetRow, ClosetRowHandle } from "@/components/ClosetRow";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLayout } from "@/context/LayoutContext";
 
 // ── Layout constants (same as wardrobe.tsx) ───────────────────────────────────
 const IMG_W = 1086;
 const IMG_H = 1448;
-const NAV_H = 90;
 const PLUM       = "#9868ba";   // icon purple (light)
 const PLUM_DARK  = "#7040a0";   // icon purple (dark)
 const GOLD       = "#d4af37";
@@ -88,6 +88,7 @@ const ROWS: { key: RowKey }[] = [
 const MIN_SPIN_MS = 1600;
 
 export default function GeneratePage() {
+  const { navH } = useLayout();
   const containerRef = useRef<HTMLDivElement>(null!);
   const ir    = useImageRect(containerRef);
   const ready = ir.width > 0;
@@ -224,7 +225,7 @@ export default function GeneratePage() {
       style={{
         position: "relative",
         width: "100%",
-        height: `calc(100dvh - ${NAV_H}px)`,
+        height: `calc(100dvh - ${navH}px)`,
         overflow: "hidden",
         transform: "translateZ(0)", // force iOS WKWebView to honour overflow:hidden
         background: "#160520",

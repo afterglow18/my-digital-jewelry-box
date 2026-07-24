@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Sparkles, Bookmark, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetWardrobeStats } from "@/hooks/useLocalWardrobe";
+import { useLayout } from "@/context/LayoutContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -11,16 +12,82 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [location] = useLocation();
   const { data: stats } = useGetWardrobeStats();
+  const { isTablet } = useLayout();
 
   const wardrobeCount = stats?.total ?? undefined;
 
   const navItems = [
-    { href: "/",         label: "Jewelry",  icon: null,     badge: wardrobeCount },
+    { href: "/",         label: "Jewelry",  icon: null,       badge: wardrobeCount },
     { href: "/generate", label: "Generate", icon: Sparkles },
     { href: "/saved",    label: "Saved",    icon: Bookmark },
     { href: "/backup",   label: "Account",  icon: UserCircle },
   ];
 
+  /* ── Tablet: sidebar layout ───────────────────────────────────────── */
+  if (isTablet) {
+    return (
+      <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
+        {/* Left sidebar nav */}
+        <nav className="w-[80px] shrink-0 flex flex-col items-center py-8 gap-2 bg-white border-r-[3px] border-black z-40">
+          {navItems.map((item) => {
+            const isActive = location === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex flex-col items-center gap-1 group w-full px-1"
+              >
+                <div
+                  className={cn(
+                    "w-12 h-12 flex items-center justify-center rounded-full border-2 transition-all duration-200 relative",
+                    isActive
+                      ? "bg-primary border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] -translate-y-0.5"
+                      : "bg-transparent border-transparent group-hover:bg-muted group-active:scale-95",
+                  )}
+                >
+                  {Icon ? (
+                    <Icon
+                      className={cn(
+                        "w-5 h-5",
+                        isActive ? "text-black" : "text-muted-foreground",
+                        item.href === "/generate" && isActive ? "animate-pulse" : "",
+                      )}
+                      strokeWidth={isActive ? 2.5 : 2}
+                    />
+                  ) : (
+                    <span className="text-xl leading-none select-none">💎</span>
+                  )}
+
+                  {/* Badge */}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <div className="absolute -top-1.5 -right-1.5 bg-secondary text-black text-[10px] font-bold border-2 border-black w-5 h-5 flex items-center justify-center rounded-full shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </div>
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    "text-[9px] font-bold uppercase tracking-wider transition-colors",
+                    isActive ? "text-black" : "text-muted-foreground",
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto relative">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
+  /* ── Mobile: phone-frame layout (unchanged) ───────────────────────── */
   return (
     <div className="min-h-[100dvh] w-full bg-[#f8f9fa] flex justify-center lg:py-8 lg:px-4">
       {/* Phone Frame Constraint for Desktop */}

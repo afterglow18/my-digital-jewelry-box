@@ -24,6 +24,7 @@ import { UpgradeSheet, UpgradeReason } from "@/components/paywall/UpgradeSheet";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { FREE_ITEM_LIMIT } from "@/types/local";
+import { useLayout } from "@/context/LayoutContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type RowKey   = "rings" | "earrings" | "necklaces" | "bracelets";
@@ -39,7 +40,6 @@ const ROWS: { key: RowKey; btnLabel: string }[] = [
 // ── Image constants ───────────────────────────────────────────────────────────
 const IMG_W = 1086;
 const IMG_H = 1448;
-const NAV_H = 90;
 
 // Fraction of image height reserved at the top of every section for the heading.
 const LABEL_FRAC = 0.042;
@@ -175,6 +175,7 @@ export default function WardrobePage() {
     );
   };
 
+  const { navH } = useLayout();
   const [, navigate] = useLocation();
   const isFree    = tier === "free";
   const itemsLeft = isFree ? Math.max(0, FREE_ITEM_LIMIT - totalItems) : null;
@@ -194,7 +195,7 @@ export default function WardrobePage() {
       style={{
         position: "relative",
         width: "100%",
-        height: `calc(100dvh - ${NAV_H}px)`,
+        height: `calc(100dvh - ${navH}px)`,
         overflow: "hidden",
         transform: "translateZ(0)", // force iOS WKWebView to honour overflow:hidden
         background: "#160520",

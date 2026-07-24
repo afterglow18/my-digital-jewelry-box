@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch, Redirect, Router as WouterRouter } from 'wouter';
+import { LayoutProvider } from '@/context/LayoutContext';
 import { AppLayout } from './components/layout/AppLayout';
 import WardrobePage from './pages/wardrobe';
 import GeneratePage from './pages/generate';
@@ -90,7 +91,9 @@ function AppShell() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell />
+      <LayoutProvider>
+        <AppShell />
+      </LayoutProvider>
     </QueryClientProvider>
   );
 }
