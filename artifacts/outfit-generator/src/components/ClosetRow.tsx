@@ -32,8 +32,7 @@ import React, {
 const SCALE_CTR   = 1.12;            // center card is 12% larger
 const SCALE_SIDE  = 0.88;            // side cards are 88% of center
 const OPACITY_SIDE = 0.72;           // side cards fade to 72%
-const BG_CENTER   = "rgba(22, 5, 32, 0.95)";          // dark plum card for selected item
-const BG_SIDE     = "rgba(233, 216, 255, 0.72)";      // very light purple for side/unselected cards
+const BG_CENTER   = "rgba(233, 216, 255, 0.82)";      // light lavender card for selected item
 const SHADOW_CTR  = "0 4px 20px rgba(100,50,160,0.45), 0 1px 6px rgba(0,0,0,0.40)";
 import type { ClothingItem } from "@/types/local";
 import { getImageUrl } from "@/lib/utils";
@@ -278,7 +277,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
               // Discrete snap state — CSS transition interpolates the rest
               scale   = isCenter ? SCALE_CTR  : SCALE_SIDE;
               opacity = isCenter ? 1          : OPACITY_SIDE;
-              bg      = isCenter ? BG_CENTER  : BG_SIDE;
+              bg      = isCenter ? BG_CENTER  : "transparent";
               shadow  = isCenter ? SHADOW_CTR : "none";
             } else {
               // Live drag — smooth per-frame interpolation based on actual px position
@@ -288,7 +287,7 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
               const p = Math.max(0, Math.min(1, 1 - distSlots));
               scale   = SCALE_SIDE  + (SCALE_CTR   - SCALE_SIDE)   * p;
               opacity = OPACITY_SIDE + (1           - OPACITY_SIDE) * p;
-              bg      = p > 0.5 ? BG_CENTER : BG_SIDE;
+              bg      = p > 0.5 ? BG_CENTER : "transparent";
               shadow  = p > 0.05
                 ? `0 ${(4 * p).toFixed(1)}px ${(16 * p).toFixed(1)}px rgba(100,50,160,${(0.40 * p).toFixed(3)})`
                 : "none";
