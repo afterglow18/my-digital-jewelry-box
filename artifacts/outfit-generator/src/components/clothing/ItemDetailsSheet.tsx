@@ -358,6 +358,10 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   // The image to display — optimistic takes priority over what's in the DB record.
   const displayedImageUrl = optimisticImageUrl ?? getImageUrl(item.imageObjectPath) ?? null;
 
+  // Hide "Clean Up Photo" once the background has already been removed.
+  // Cleaned images are stored as PNG data URLs; originals are JPEGs.
+  const alreadyCleaned = !!(displayedImageUrl?.startsWith("data:image/png"));
+
   return (
     <>
       <motion.div
@@ -405,15 +409,17 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             }}>
             <img src={displayedImageUrl} alt={item.name}
               className="w-full h-full object-contain" />
-            <button
-              onClick={() => setBgOverlayOpen(true)}
-              className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5
-                         bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
-                         shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                         active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-              <Wand2 className="w-3.5 h-3.5" />
-              Clean Up Photo
-            </button>
+            {!alreadyCleaned && (
+              <button
+                onClick={() => setBgOverlayOpen(true)}
+                className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5
+                           bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                <Wand2 className="w-3.5 h-3.5" />
+                Clean Up Photo
+              </button>
+            )}
           </div>
         )}
 
