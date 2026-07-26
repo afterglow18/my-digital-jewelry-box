@@ -2,15 +2,17 @@
  * ItemDetailsSheet — full-screen overlay showing a clothing item's details.
  * Every field is optional and editable. A "Save" button appears only when
  * the form is dirty. Delete is always available.
+ * Includes on-device background removal for saved photos.
  */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, Trash2, Save, ChevronDown } from "lucide-react";
+import { X, Heart, Trash2, Save, ChevronDown, Loader2, Check, Wand2 } from "lucide-react";
 import type { ClothingItem, ClothingItemUpdateCategory } from "@/types/local";
 import { useUpdateClothingItem, useDeleteClothingItem, getListClothingQueryKey } from "@/hooks/useLocalWardrobe";
 import { getListOutfitsQueryKey } from "@/hooks/useLocalOutfits";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
+import { removeBackground, blobToDataUrl, dataUrlToBlob } from "@/lib/backgroundRemoval";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -112,8 +114,16 @@ function isDirty(form: FormState, item: ClothingItem): boolean {
 }
 
 export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
-  const [form, setForm]                   = useState<FormState | null>(null);
+  const [form, setForm]                         = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // ── Background removal state ───────────────────────────────────────────────
+  type BgPhase = "idle" | "processing" | "preview" | "failed";
+  const [bgPhase,     setBgPhase]     = useState<BgPhase>("idle");
+  const [cleanedUrl,  setCleanedUrl]  = useState<string | null>(null);
+  const [cleanedBlob, setCleanedBlob] = useState<Blob | null>(null);
+  const [bgSelected,  setBgSelected]  = useState<"original" | "cleaned">("cleaned");
+  const bgGenRef = useRef(0);
 
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
@@ -122,6 +132,12 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   useEffect(() => {
     if (item) setForm(toForm(item));
     setShowDeleteConfirm(false);
+    // Reset bg removal when item changes
+    setBgPhase("idle");
+    setCleanedUrl(null);
+    setCleanedBlob(null);
+    setBgSelected("cleaned");
+    bgGenRef.current += 1;
   }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!item || !form) return null;
@@ -170,6 +186,50 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     );
   };
 
+  // ── Background removal handlers ────────────────────────────────────────────
+
+  const handleRemoveBackground = useCallback(async () => {
+    const imageUrl = getImageUrl(item.imageObjectPath);
+    if (!imageUrl) return;
+    const myGen = ++bgGenRef.current;
+    setBgPhase("processing");
+    setCleanedUrl(null);
+    setCleanedBlob(null);
+    setBgSelected("cleaned");
+    try {
+      const resultUrl  = await removeBackground(imageUrl);
+      if (bgGenRef.current !== myGen) return;
+      const resultBlob = await dataUrlToBlob(resultUrl);
+      if (bgGenRef.current !== myGen) return;
+      setCleanedBlob(resultBlob);
+      setCleanedUrl(URL.createObjectURL(resultBlob));
+      setBgPhase("preview");
+    } catch (err) {
+      if (bgGenRef.current !== myGen) return;
+      console.warn("Background removal failed:", err);
+      setBgPhase("failed");
+    }
+  }, [item.imageObjectPath]);
+
+  const handleApplyClean = useCallback(async () => {
+    const blob = bgSelected === "cleaned" ? cleanedBlob : null;
+    if (!blob) { setBgPhase("idle"); return; }
+    const dataUrl = await blobToDataUrl(blob);
+    updateItem.mutate(
+      { id: item.id, data: { imageObjectPath: dataUrl } },
+      {
+        onSuccess: () => {
+          invalidate();
+          setBgPhase("idle");
+          setCleanedUrl(null);
+          setCleanedBlob(null);
+        },
+      },
+    );
+  }, [bgSelected, cleanedBlob, item.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const currentImageUrl = getImageUrl(item.imageObjectPath);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: "100%" }}
@@ -217,33 +277,203 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
         </div>
       </div>
 
-      {/* Photo */}
-      {item.imageObjectPath && (
-        <div
-          className="w-full h-52 flex-shrink-0 border-b-2 border-black"
-          style={{
-            backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
-            backgroundSize: "16px 16px",
-          }}
-        >
-          <img
-            src={getImageUrl(item.imageObjectPath)!}
-            alt={item.name}
-            className="w-full h-full object-contain"
-          />
+      {/* Photo + Background Removal */}
+      {currentImageUrl && (
+        <div className="flex-shrink-0 border-b-2 border-black">
+
+          {/* ── idle: single photo with remove-bg button ── */}
+          {bgPhase === "idle" && (
+            <div className="relative">
+              <div
+                className="w-full h-52"
+                style={{
+                  backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                  backgroundSize: "16px 16px",
+                }}
+              >
+                <img
+                  src={currentImageUrl}
+                  alt={item.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <button
+                onClick={handleRemoveBackground}
+                className="absolute bottom-2 right-2 flex items-center gap-1.5 px-3 py-1.5
+                           bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+              >
+                <Wand2 className="w-3.5 h-3.5" />
+                Remove Background
+              </button>
+            </div>
+          )}
+
+          {/* ── processing: spinner over the image ── */}
+          {bgPhase === "processing" && (
+            <div className="relative w-full h-52">
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                  backgroundSize: "16px 16px",
+                }}
+              >
+                <img
+                  src={currentImageUrl}
+                  alt={item.name}
+                  className="w-full h-full object-contain opacity-40"
+                />
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <p className="text-xs font-bold uppercase tracking-wider">Removing background…</p>
+                <p className="text-[10px] text-black/50">First use downloads ~15 MB model</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── failed ── */}
+          {bgPhase === "failed" && (
+            <div className="relative">
+              <div
+                className="w-full h-52"
+                style={{
+                  backgroundImage: "repeating-conic-gradient(#e5e7eb 0% 25%, white 0% 50%)",
+                  backgroundSize: "16px 16px",
+                }}
+              >
+                <img src={currentImageUrl} alt={item.name} className="w-full h-full object-contain" />
+              </div>
+              <div className="absolute bottom-2 right-2 flex gap-2">
+                <button
+                  onClick={handleRemoveBackground}
+                  className="flex items-center gap-1.5 px-3 py-1.5
+                             bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
+                             shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  Retry
+                </button>
+                <button
+                  onClick={() => setBgPhase("idle")}
+                  className="flex items-center gap-1.5 px-3 py-1.5
+                             bg-white border-2 border-black/30 rounded-full text-[11px] font-bold uppercase text-black/40
+                             active:opacity-70 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── preview: side-by-side chooser ── */}
+          {bgPhase === "preview" && cleanedUrl && (
+            <div className="p-3 flex flex-col gap-3">
+              <p style={{
+                textAlign: "center", fontWeight: "bold", fontSize: 11,
+                textTransform: "uppercase", letterSpacing: 2, opacity: 0.4, margin: 0,
+              }}>
+                Tap to choose
+              </p>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                {/* Original */}
+                <button
+                  onClick={() => setBgSelected("original")}
+                  style={{
+                    flex: 1,
+                    opacity: bgSelected === "original" ? 1 : 0.5,
+                    border: bgSelected === "original" ? "4px solid black" : "4px solid rgba(0,0,0,0.2)",
+                    borderRadius: 14, overflow: "hidden", background: "none", padding: 0,
+                  }}
+                >
+                  <div style={{ background: "black", minHeight: 140, position: "relative" }}>
+                    <img src={currentImageUrl} alt="Original"
+                         style={{ width: "100%", objectFit: "contain", maxHeight: 140, display: "block" }} />
+                    {bgSelected === "original" && (
+                      <div style={{
+                        position: "absolute", top: 5, right: 5, width: 18, height: 18,
+                        borderRadius: "50%", background: "black",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <Check size={10} color="white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ textAlign: "center", fontWeight: "bold", fontSize: 10,
+                              textTransform: "uppercase", padding: "5px 0", margin: 0 }}>Original</p>
+                </button>
+
+                {/* Cleaned */}
+                <button
+                  onClick={() => setBgSelected("cleaned")}
+                  style={{
+                    flex: 1,
+                    opacity: bgSelected === "cleaned" ? 1 : 0.5,
+                    border: bgSelected === "cleaned" ? "4px solid black" : "4px solid rgba(0,0,0,0.2)",
+                    borderRadius: 14, overflow: "hidden", background: "none", padding: 0,
+                  }}
+                >
+                  <div style={{
+                    background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px",
+                    minHeight: 140, position: "relative",
+                  }}>
+                    <img src={cleanedUrl} alt="Cleaned"
+                         style={{ width: "100%", objectFit: "contain", maxHeight: 140, display: "block" }} />
+                    {bgSelected === "cleaned" && (
+                      <div style={{
+                        position: "absolute", top: 5, right: 5, width: 18, height: 18,
+                        borderRadius: "50%", background: "black",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <Check size={10} color="white" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  <p style={{ textAlign: "center", fontWeight: "bold", fontSize: 10,
+                              textTransform: "uppercase", padding: "5px 0", margin: 0 }}>Cleaned ✨</p>
+                </button>
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  onClick={() => { setBgPhase("idle"); setCleanedUrl(null); setCleanedBlob(null); }}
+                  className="flex-1 py-2.5 border-2 border-black rounded-xl font-display font-bold
+                             text-xs uppercase tracking-tight bg-white
+                             shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  Discard
+                </button>
+                <button
+                  onClick={handleApplyClean}
+                  disabled={updateItem.isPending}
+                  className="flex-1 py-2.5 border-2 border-black rounded-xl font-display font-bold
+                             text-xs uppercase tracking-tight bg-primary
+                             shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                             active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
+                             disabled:opacity-40 transition-all"
+                >
+                  {updateItem.isPending ? "Saving…" : bgSelected === "cleaned" ? "Apply ✨" : "Keep Original"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* Form */}
       <div className="flex-1 px-4 py-5 flex flex-col gap-4">
         <Field label="Item Name" value={form.name} onChange={patch("name") as (v: string) => void}
-               placeholder="e.g. Charlotte Tilbury Flawless Filter" />
+               placeholder="e.g. Gold Hoop Earrings" />
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="e.g. NARS" />
+          <Field label="Brand"  value={form.brand} onChange={patch("brand") as (v: string) => void} placeholder="e.g. Mejuri" />
           <Field label="Color"  value={form.color} onChange={patch("color") as (v: string) => void} placeholder="Rose Gold" />
         </div>
         <Field label="Size / Volume" value={form.size} onChange={patch("size") as (v: string) => void}
-               placeholder="30ml, 50ml, Full Size…" />
+               placeholder="Small, Medium, Large…" />
         <div className="grid grid-cols-2 gap-3">
           <SelectField label="Season"   value={form.season}   onChange={patch("season") as (v: string) => void}   options={SEASON_OPTIONS} />
           <SelectField label="Occasion" value={form.occasion} onChange={patch("occasion") as (v: string) => void} options={OCCASION_OPTIONS} />

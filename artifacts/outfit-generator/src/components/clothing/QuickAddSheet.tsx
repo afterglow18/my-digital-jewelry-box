@@ -249,7 +249,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     }
     // Multiple files → batch upload, no preview
     setErrorMsg(null);
-    setPhase("uploading");
+    setPhase("encoding");
     setProgress({ done: 0, total: files.length });
     let saved = 0;
     for (let i = 0; i < files.length; i++) {
