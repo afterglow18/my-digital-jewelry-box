@@ -404,7 +404,7 @@ export default function GeneratePage() {
                   fontWeight: 800, fontSize: 12, letterSpacing: "0.07em",
                   textTransform: "uppercase", color: "#7a3040",
                   fontFamily: "var(--font-display)", margin: 0,
-                }}>Your vanity is empty</p>
+                }}>Your jewelry box is empty</p>
                 <p style={{ fontSize: 11, color: "#9a5060", marginTop: 5, lineHeight: 1.5 }}>
                   Add rings, earrings, necklaces or bracelets in the Jewelry Box tab first.
                 </p>

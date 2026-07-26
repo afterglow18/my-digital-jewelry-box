@@ -480,7 +480,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                          font-bold uppercase border-2 border-black/20 text-black/35
                          hover:border-red-500 hover:text-red-600 transition-all">
               <Trash2 className="w-4 h-4" />
-              Delete Item
+              Delete from Jewelry Box
             </button>
           ) : (
             <div className="flex gap-2">
@@ -495,7 +495,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                            bg-red-500 text-white shadow-[2px_2px_0px_0px_rgba(185,28,28,1)]
                            active:translate-y-0.5 active:translate-x-0.5 active:shadow-none transition-all
                            disabled:opacity-50">
-                {deleteItem.isPending ? "Deleting…" : "Yes, Delete Forever"}
+                {deleteItem.isPending ? "Deleting…" : "Yes, Delete"}
               </button>
             </div>
           )}

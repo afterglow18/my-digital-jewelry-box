@@ -525,7 +525,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               <p className="text-sm text-muted-foreground mt-1">
                 {progress && progress.total > 1
                   ? `${progress.done} of ${progress.total} photos added.`
-                  : "Adding to your vanity."}
+                  : "Adding to your jewelry box."}
               </p>
             </div>
           </div>
