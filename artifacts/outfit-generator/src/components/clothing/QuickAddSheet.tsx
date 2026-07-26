@@ -77,10 +77,10 @@ interface Props {
 }
 
 const PHOTO_TIPS = [
-  "Photograph individual products or bundle multiple items together.",
-  "Lay everything flat on a plain background.",
+  "Photograph a single piece or matching set.",
+  "Lay jewelry on a plain background.",
   "Take the photo from directly above.",
-  "Keep all items fully in frame.",
+  "Keep the entire piece fully in frame.",
 ] as const;
 
 export function QuickAddSheet({ open, onOpenChange, category, existingCount, onCreated }: Props) {
