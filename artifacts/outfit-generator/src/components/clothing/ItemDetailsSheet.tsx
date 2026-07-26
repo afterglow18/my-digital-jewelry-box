@@ -109,7 +109,10 @@ function BgRemovalOverlay({
 }) {
   const [status,     setStatus]     = useState<BgStatus>("processing");
   const [cleanedUrl, setCleanedUrl] = useState<string | null>(null);
-  const [selected,   setSelected]   = useState<"original" | "cleaned">("cleaned");
+  // default to "original" while cleaning runs; auto-switch to "cleaned" when done
+  // unless the user has manually picked "original"
+  const [selected,       setSelected]       = useState<"original" | "cleaned">("original");
+  const userPickedManually = useRef(false);
   const cancelled = useRef(false);
 
   useEffect(() => {
@@ -119,6 +122,8 @@ function BgRemovalOverlay({
         if (cancelled.current) return;
         setCleanedUrl(url);
         setStatus("ready");
+        // auto-select cleaned only if user hasn't tapped original intentionally
+        if (!userPickedManually.current) setSelected("cleaned");
       })
       .catch((err) => {
         if (cancelled.current) return;
@@ -127,6 +132,11 @@ function BgRemovalOverlay({
       });
     return () => { cancelled.current = true; };
   }, [originalUrl]);
+
+  const handleSelect = (choice: "original" | "cleaned") => {
+    userPickedManually.current = true;
+    setSelected(choice);
+  };
 
   const handleSave = () => {
     const url = selected === "cleaned" && cleanedUrl ? cleanedUrl : originalUrl;
@@ -153,23 +163,10 @@ function BgRemovalOverlay({
         </button>
       </div>
 
-      {/* Body */}
+      {/* Body — always show side-by-side, cleaned card shows spinner while processing */}
       <div className="flex-1 flex flex-col overflow-y-auto">
 
-        {/* Processing */}
-        {status === "processing" && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
-            <div className="w-24 h-24 border-4 border-black rounded-3xl bg-white flex items-center justify-center
-                            shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-              <Loader2 className="w-10 h-10 animate-spin" strokeWidth={1.5} />
-            </div>
-            <p className="font-display font-bold text-xl uppercase tracking-tight">Removing background…</p>
-            <p className="text-sm text-black/50 text-center">First use downloads ~15 MB model, then it's cached.</p>
-          </div>
-        )}
-
-        {/* Failed */}
-        {status === "failed" && (
+        {status === "failed" ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
             <span className="text-5xl">😕</span>
             <p className="font-display font-bold text-lg uppercase">Couldn't remove background</p>
@@ -181,19 +178,16 @@ function BgRemovalOverlay({
               Go Back
             </button>
           </div>
-        )}
-
-        {/* Side-by-side comparison */}
-        {status === "ready" && cleanedUrl && (
+        ) : (
           <div className="flex flex-col gap-5 p-5">
             <p className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-black/40">
-              Tap to choose
+              {status === "processing" ? "Cleaning up photo…" : "Tap to choose"}
             </p>
 
             <div className="flex gap-3">
-              {/* Original card */}
+              {/* Original card — always interactive */}
               <button
-                onClick={() => setSelected("original")}
+                onClick={() => handleSelect("original")}
                 className="flex-1 flex flex-col rounded-2xl overflow-hidden transition-all"
                 style={{
                   outline: selected === "original" ? "3px solid #ec4899" : "3px solid transparent",
@@ -215,13 +209,16 @@ function BgRemovalOverlay({
                 </div>
               </button>
 
-              {/* Cleaned card */}
+              {/* Cleaned card — spinner while processing, image when ready */}
               <button
-                onClick={() => setSelected("cleaned")}
+                onClick={() => status === "ready" && handleSelect("cleaned")}
+                disabled={status === "processing"}
                 className="flex-1 flex flex-col rounded-2xl overflow-hidden transition-all"
                 style={{
-                  outline: selected === "cleaned" ? "3px solid #ec4899" : "3px solid transparent",
+                  outline: selected === "cleaned" && status === "ready" ? "3px solid #ec4899" : "3px solid transparent",
                   outlineOffset: 2,
+                  opacity: status === "processing" ? 0.6 : 1,
+                  cursor: status === "processing" ? "default" : "pointer",
                 }}
               >
                 <div className="relative flex-1 flex items-center justify-center"
@@ -229,26 +226,41 @@ function BgRemovalOverlay({
                     minHeight: 200,
                     background: "repeating-conic-gradient(#d1d5db 0% 25%, white 0% 50%) 0 0 / 12px 12px",
                   }}>
-                  <img src={cleanedUrl} alt="Cleaned"
-                    className="w-full object-contain" style={{ maxHeight: 200, display: "block" }} />
-                  {selected === "cleaned" && (
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500
-                                    flex items-center justify-center shadow">
-                      <Check size={13} color="white" strokeWidth={3} />
+                  {status === "processing" ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-8 h-8 animate-spin text-black/40" strokeWidth={1.5} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-black/40">Processing…</span>
                     </div>
-                  )}
+                  ) : cleanedUrl ? (
+                    <>
+                      <img src={cleanedUrl} alt="Cleaned"
+                        className="w-full object-contain" style={{ maxHeight: 200, display: "block" }} />
+                      {selected === "cleaned" && (
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500
+                                        flex items-center justify-center shadow">
+                          <Check size={13} color="white" strokeWidth={3} />
+                        </div>
+                      )}
+                    </>
+                  ) : null}
                 </div>
                 <div className="bg-white py-2 text-center">
                   <span className="text-[11px] font-bold uppercase tracking-wider">Cleaned ✨</span>
                 </div>
               </button>
             </div>
+
+            {status === "processing" && (
+              <p className="text-center text-[10px] text-black/35 -mt-2">
+                First use downloads ~15 MB model, then it's cached.
+              </p>
+            )}
           </div>
         )}
       </div>
 
-      {/* Footer buttons — only show when ready */}
-      {status === "ready" && (
+      {/* Footer — always visible (except failed state) */}
+      {status !== "failed" && (
         <div className="px-4 py-4 bg-white border-t-2 border-black flex-shrink-0 flex flex-col gap-2"
           style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
           <button
@@ -258,7 +270,7 @@ function BgRemovalOverlay({
                        shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
                        active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
           >
-            {selected === "cleaned" ? "Save Cleaned Version ✨" : "Save Original"}
+            {selected === "cleaned" && status === "ready" ? "Save Cleaned Version ✨" : "Save Original"}
           </button>
           <button
             onClick={onClose}
