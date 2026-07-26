@@ -100,6 +100,8 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
   // Each photo bumps this counter. Every async step checks it before writing state —
   // prevents a slow first photo from clobbering a fast second one.
   const bgGenRef = useRef(0);
+  // True if the user tapped Original themselves — suppresses the auto-switch to cleaned.
+  const userPickedManually = useRef(false);
 
   const cameraInputRef  = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -171,6 +173,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
     setBgFailed(false);
     setBgProcessing(false);
     setSelected("original");
+    userPickedManually.current = false;
     setPhase("encoding");
 
     // Encode to JPEG ≤ 2048px
@@ -202,7 +205,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
       if (bgGenRef.current !== myGen) { URL.revokeObjectURL(resultObjUrl); return; }
       setCleanedBlob(resultBlob);
       setCleanedUrl(resultObjUrl);
-      setSelected("cleaned");
+      if (!userPickedManually.current) setSelected("cleaned");
     } catch (err) {
       if (bgGenRef.current !== myGen) return;
       console.warn("Background removal failed:", err);
@@ -393,7 +396,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
             <div style={{ display: "flex", gap: 12 }}>
               {/* Original card */}
               <button
-                onClick={() => setSelected("original")}
+                onClick={() => { userPickedManually.current = true; setSelected("original"); }}
                 style={{
                   flex: 1,
                   opacity: selected === "original" ? 1 : 0.5,
@@ -425,7 +428,7 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
 
               {/* Cleaned card */}
               <button
-                onClick={() => cleanedUrl && setSelected("cleaned")}
+                onClick={() => { if (cleanedUrl) { userPickedManually.current = true; setSelected("cleaned"); } }}
                 disabled={!cleanedUrl}
                 style={{
                   flex: 1,
@@ -495,14 +498,12 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </button>
               <button
                 onClick={handleSave}
-                disabled={bgProcessing}
                 className="flex-1 py-3 border-2 border-black rounded-xl font-display font-bold
                            text-sm uppercase tracking-tight bg-primary
                            shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none
-                           disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
               >
-                {bgProcessing ? "Processing…" : "✓ Save to Closet"}
+                {bgProcessing && selected === "cleaned" ? "Processing…" : "✓ Save to Closet"}
               </button>
             </div>
           </div>
