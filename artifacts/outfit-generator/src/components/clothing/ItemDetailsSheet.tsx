@@ -308,16 +308,27 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     setBgOverlayOpen(false);
   }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+  }, [queryClient]);
+
+  // Optimistic save: update local state immediately, fire DB write in background.
+  // Must be defined before the early return so hook count is stable every render.
+  const handleBgSave = useCallback((chosenDataUrl: string) => {
+    setOptimisticImageUrl(chosenDataUrl);  // instant visual update — no flash
+    setBgOverlayOpen(false);
+    updateItem.mutate(
+      { id: item?.id ?? "", data: { imageObjectPath: chosenDataUrl } },
+      { onSuccess: () => invalidate() },
+    );
+  }, [item?.id, invalidate, updateItem]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!item || !form) return null;
 
   const dirty = isDirty(form, item);
   const patch = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: getListClothingQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
-  };
 
   const handleSave = () => {
     updateItem.mutate(
@@ -343,16 +354,6 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
       { onSuccess: () => { invalidate(); onDeleted?.(); onClose(); } },
     );
   };
-
-  // Optimistic save: update local state immediately, fire DB write in background.
-  const handleBgSave = useCallback((chosenDataUrl: string) => {
-    setOptimisticImageUrl(chosenDataUrl);  // instant visual update — no flash
-    setBgOverlayOpen(false);
-    updateItem.mutate(
-      { id: item.id, data: { imageObjectPath: chosenDataUrl } },
-      { onSuccess: () => invalidate() },
-    );
-  }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The image to display — optimistic takes priority over what's in the DB record.
   const displayedImageUrl = optimisticImageUrl ?? getImageUrl(item.imageObjectPath) ?? null;
