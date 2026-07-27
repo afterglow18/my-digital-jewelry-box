@@ -204,6 +204,9 @@ function BgRemovalOverlay({
                     </div>
                   )}
                 </div>
+                <div className="bg-white py-2 text-center">
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Original</span>
+                </div>
               </button>
 
               {/* Cleaned card — spinner while processing, image when ready */}
@@ -240,6 +243,9 @@ function BgRemovalOverlay({
                       )}
                     </>
                   ) : null}
+                </div>
+                <div className="bg-white py-2 text-center">
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Cleaned ✨</span>
                 </div>
               </button>
             </div>
