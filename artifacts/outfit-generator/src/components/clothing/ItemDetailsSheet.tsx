@@ -250,11 +250,7 @@ function BgRemovalOverlay({
               </button>
             </div>
 
-            {status === "processing" && (
-              <p className="text-center text-[10px] text-black/35 -mt-2">
-                First use downloads ~15 MB model, then it's cached.
-              </p>
-            )}
+
           </div>
         )}
       </div>
