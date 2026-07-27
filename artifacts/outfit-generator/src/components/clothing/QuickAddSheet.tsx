@@ -420,10 +420,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                     </div>
                   )}
                 </div>
-                <p style={{
-                  textAlign: "center", fontWeight: "bold", fontSize: 11,
-                  textTransform: "uppercase", padding: "6px 0", margin: 0,
-                }}>Original</p>
               </button>
 
               {/* Cleaned card */}
@@ -478,10 +474,6 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
                     </div>
                   )}
                 </div>
-                <p style={{
-                  textAlign: "center", fontWeight: "bold", fontSize: 11,
-                  textTransform: "uppercase", padding: "6px 0", margin: 0,
-                }}>Cleaned ✨</p>
               </button>
             </div>
 
