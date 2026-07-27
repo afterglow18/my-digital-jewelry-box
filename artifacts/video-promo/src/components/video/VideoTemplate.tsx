@@ -22,16 +22,22 @@ export default function VideoTemplate() {
     durations: SCENE_DURATIONS,
   });
 
+  const W = 886;
+  const H = 1920;
+
   return (
     <div
       className="w-full h-screen flex items-center justify-center overflow-hidden"
-      style={{ backgroundColor: 'var(--color-brand-dusty-rose)' }}
+      style={{ backgroundColor: '#111' }}
     >
       <div
-        className="relative overflow-hidden w-full h-full"
+        className="relative overflow-hidden"
         style={{
-          aspectRatio: '16 / 9',
+          width: W,
+          height: H,
           backgroundColor: 'var(--color-brand-dusty-rose)',
+          transform: `scale(${Math.min(window.innerWidth / W, window.innerHeight / H)})`,
+          transformOrigin: 'center center',
         }}
       >
         <PersistentBackground currentScene={currentScene} />
