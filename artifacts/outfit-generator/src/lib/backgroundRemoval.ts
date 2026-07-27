@@ -16,6 +16,31 @@ import { removeBackground as imglyRemoveBackground } from "@imgly/background-rem
  *     multithreading silently crashes. Single-threaded avoids it.
  */
 let ortConfigured = false;
+let warmUpStarted = false;
+
+/**
+ * Pre-warm the ONNX background-removal model so the first real invocation
+ * feels instant. Pass a tiny 1×1 transparent PNG through the full pipeline —
+ * this downloads and caches the ~15 MB ONNX model in the background without
+ * blocking the main thread.
+ *
+ * Safe to call multiple times; only runs once per session (module-level guard).
+ */
+export async function warmUpBackgroundRemoval(): Promise<void> {
+  if (warmUpStarted) return;
+  warmUpStarted = true;
+
+  try {
+    // Minimal 1×1 transparent PNG as a data URL
+    const tiny1x1Png =
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+    await removeBackground(tiny1x1Png);
+  } catch {
+    // Warm-up failure is non-fatal — silently ignore so the real first
+    // call can try again and surface any error through the normal path.
+  }
+}
+
 async function configureOrt() {
   if (ortConfigured) return;
   ortConfigured = true;

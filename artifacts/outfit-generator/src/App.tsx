@@ -13,6 +13,7 @@ import { queryClient } from '@/lib/queryClient';
 import { useState, useEffect } from 'react';
 import { initRevenueCat } from '@/lib/revenuecat';
 import { syncWithRevenueCat } from '@/hooks/useEntitlements';
+import { warmUpBackgroundRemoval } from '@/lib/backgroundRemoval';
 import { useBiometricLock } from '@/hooks/useBiometricLock';
 import { BiometricLockContext } from '@/contexts/BiometricLockContext';
 import { AnimatePresence } from 'framer-motion';
@@ -50,6 +51,16 @@ function AppShell() {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
   const [entered, setEntered] = useState<boolean>(() => isPreview);
   const { enabled, isLocked, authenticate, enableLock, disableLock } = useBiometricLock();
+
+  // Pre-warm the ONNX background-removal model after the first paint so the
+  // first real "Clean Up Photo" invocation feels instant. Deferred with
+  // setTimeout(0) so it runs after React has finished the initial render.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      warmUpBackgroundRemoval();
+    }, 0);
+    return () => clearTimeout(id);
+  }, []);
 
   // Sync entitlements from RevenueCat on launch and every time the app
   // returns to the foreground. This ensures refunded or expired purchases
