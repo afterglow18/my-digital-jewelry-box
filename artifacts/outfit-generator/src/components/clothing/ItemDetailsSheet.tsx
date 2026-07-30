@@ -71,6 +71,8 @@ interface FormState {
   name: string; brand: string; color: string; size: string;
   season: string; occasion: string; purchasePrice: string;
   purchaseDate: string; notes: string; isFavorite: boolean; category: string;
+  timesWorn: string;          // editable number stored as string
+  lastWornDate: string | null; // "YYYY-MM-DD" local date, null if never worn
 }
 
 function toForm(item: ClothingItem): FormState {
@@ -79,17 +81,22 @@ function toForm(item: ClothingItem): FormState {
     size: item.size ?? "", season: item.season ?? "", occasion: item.occasion ?? "",
     purchasePrice: item.purchasePrice ?? "", purchaseDate: item.purchaseDate ?? "",
     notes: item.notes ?? "", isFavorite: item.isFavorite ?? false, category: item.category ?? "",
+    timesWorn: String(item.timesWorn ?? 0),
+    lastWornDate: (item as ClothingItem & { lastWornDate?: string | null }).lastWornDate ?? null,
   };
 }
 
 function isDirty(form: FormState, item: ClothingItem): boolean {
+  const itemLastWorn = (item as ClothingItem & { lastWornDate?: string | null }).lastWornDate ?? null;
   return (
     form.name !== (item.name ?? "") || form.brand !== (item.brand ?? "") ||
     form.color !== (item.color ?? "") || form.size !== (item.size ?? "") ||
     form.season !== (item.season ?? "") || form.occasion !== (item.occasion ?? "") ||
     form.purchasePrice !== (item.purchasePrice ?? "") || form.purchaseDate !== (item.purchaseDate ?? "") ||
     form.notes !== (item.notes ?? "") || form.isFavorite !== (item.isFavorite ?? false) ||
-    form.category !== (item.category ?? "")
+    form.category !== (item.category ?? "") ||
+    form.timesWorn !== String(item.timesWorn ?? 0) ||
+    form.lastWornDate !== itemLastWorn
   );
 }
 
@@ -293,6 +300,9 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
   // before the DB write completes, so the sheet never flashes back to the old photo.
   const [optimisticImageUrl, setOptimisticImageUrl] = useState<string | null>(null);
 
+  // Saved before logging today so "Undo" can restore the previous lastWornDate.
+  const prevLastWornDateRef = useRef<string | null>(null);
+
   const updateItem  = useUpdateClothingItem();
   const deleteItem  = useDeleteClothingItem();
   const queryClient = useQueryClient();
@@ -302,6 +312,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
     setShowDeleteConfirm(false);
     setOptimisticImageUrl(null);
     setBgOverlayOpen(false);
+    prevLastWornDateRef.current = null;
   }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const invalidate = useCallback(() => {
@@ -322,6 +333,40 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
 
   if (!item || !form) return null;
 
+  // ── Wear tracking ──────────────────────────────────────────────────────────
+
+  /** Today as "YYYY-MM-DD" in the device's local timezone (en-CA locale gives that format). */
+  const todayStr = new Date().toLocaleDateString("en-CA");
+  const isLoggedToday = form.lastWornDate === todayStr;
+
+  const handleLogToday = () => {
+    prevLastWornDateRef.current = form.lastWornDate;
+    const newCount = (parseInt(form.timesWorn) || 0) + 1;
+    setForm((prev) => prev ? { ...prev, timesWorn: String(newCount), lastWornDate: todayStr } : prev);
+    updateItem.mutate(
+      { id: item.id, data: { timesWorn: newCount, lastWornDate: todayStr } },
+      { onSuccess: () => invalidate() },
+    );
+  };
+
+  const handleUndoLog = () => {
+    const prevDate = prevLastWornDateRef.current;
+    const newCount = Math.max(0, (parseInt(form.timesWorn) || 0) - 1);
+    setForm((prev) => prev ? { ...prev, timesWorn: String(newCount), lastWornDate: prevDate ?? null } : prev);
+    updateItem.mutate(
+      { id: item.id, data: { timesWorn: newCount, lastWornDate: prevDate ?? null } },
+      { onSuccess: () => invalidate() },
+    );
+  };
+
+  /** "YYYY-MM-DD" → "M/D/YY" without using new Date() (avoids UTC-shift off-by-one). */
+  const formatLastWorn = (d: string) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return `${m}/${day}/${String(y).slice(2)}`;
+  };
+
+  // ── Form helpers ───────────────────────────────────────────────────────────
+
   const dirty = isDirty(form, item);
   const patch = (key: keyof FormState) => (value: string | boolean) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev);
@@ -338,6 +383,8 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           purchaseDate: form.purchaseDate.trim() || null, notes: form.notes.trim() || null,
           isFavorite: form.isFavorite,
           category: (form.category || item.category) as ClothingItemUpdateCategory,
+          timesWorn: Math.max(0, parseInt(form.timesWorn) || 0),
+          lastWornDate: form.lastWornDate,
         },
       },
       { onSuccess: () => { invalidate(); onClose(); } },
@@ -405,6 +452,28 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             }}>
             <img src={displayedImageUrl} alt={item.name}
               className="w-full h-full object-contain" />
+            {/* Wear tracking button — left side */}
+            {!isLoggedToday ? (
+              <button
+                onClick={handleLogToday}
+                className="absolute bottom-2 left-2 flex items-center gap-1.5 px-3 py-1.5
+                           bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                Wearing This Today
+              </button>
+            ) : (
+              <button
+                onClick={handleUndoLog}
+                className="absolute bottom-2 left-2 flex items-center gap-1.5 px-3 py-1.5
+                           bg-primary border-2 border-black rounded-full text-[11px] font-bold uppercase
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                <Check className="w-3 h-3" /> Logged · Undo
+              </button>
+            )}
+
+            {/* Clean Up Photo — right side */}
             {!alreadyCleaned && (
               <button
                 onClick={() => setBgOverlayOpen(true)}
@@ -447,11 +516,19 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
           <div className="grid grid-cols-2 gap-3">
             <SelectField label="Category" value={form.category}
                          onChange={patch("category") as (v: string) => void} options={CATEGORY_OPTIONS} />
-            <div className="flex flex-col gap-1 opacity-50 pointer-events-none">
+            <div className="flex flex-col gap-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-black/40">Times Worn</span>
-              <div className="border-2 border-black/20 rounded-lg px-3 py-2 text-sm font-medium bg-white/50">
-                {item.timesWorn ?? 0}
-              </div>
+              <input
+                type="number" min="0"
+                value={form.timesWorn}
+                onChange={(e) => patch("timesWorn")(e.target.value)}
+                className="w-full border-2 border-black rounded-lg px-3 py-2 text-sm font-medium
+                           bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
+              {form.lastWornDate && (
+                <span className="text-[10px] text-black/40 mt-0.5">
+                  Last worn: {formatLastWorn(form.lastWornDate)}
+                </span>
+              )}
             </div>
           </div>
         </div>
