@@ -31,30 +31,48 @@ export default function HeroSplash({ onContinue }: Props) {
         overflow: "hidden",
       }}
     >
-      {/* Full-screen hero image */}
+      {/* Hero image — contained so the full jewelry box is visible */}
       <img
         src="/hero-splash.jpg"
         alt="My Digital Jewelry Box"
         draggable={false}
         style={{
           position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "center top",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -52%)",
+          width: "92%",
+          height: "auto",
+          maxHeight: "80%",
+          objectFit: "contain",
+          borderRadius: 18,
           userSelect: "none",
           pointerEvents: "none",
         }}
       />
 
-      {/* Dark gradient over lower portion for text readability */}
+      {/* Subtle glow behind the box */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -52%)",
+          width: "90%",
+          height: "78%",
+          background: "radial-gradient(ellipse at center, rgba(120,50,180,0.18) 0%, transparent 70%)",
+          pointerEvents: "none",
+          zIndex: -1,
+        }}
+      />
+
+      {/* Gradient at bottom for text readability */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to top, rgba(14,3,20,0.94) 0%, rgba(14,3,20,0.65) 28%, transparent 55%)",
+            "linear-gradient(to top, rgba(14,3,20,0.96) 0%, rgba(14,3,20,0.5) 22%, transparent 42%)",
           pointerEvents: "none",
         }}
       />
