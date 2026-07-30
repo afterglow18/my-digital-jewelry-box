@@ -332,6 +332,85 @@ export default function WelcomePage({ onEnter }: Props) {
         </motion.div>
       </div>
 
+      {/* ── Phase 2 branding + action button ── */}
+      <AnimatePresence>
+        {phase === "closed" && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            style={{
+              position: "fixed",
+              bottom: "calc(env(safe-area-inset-bottom) + 72px)",
+              left: 0,
+              right: 0,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 16,
+              zIndex: 210,
+            }}
+          >
+            {/* "Welcome to / MY DIGITAL JEWELRY BOX" */}
+            <div style={{ textAlign: "center", pointerEvents: "none" }}>
+              <p
+                style={{
+                  margin: 0,
+                  marginBottom: 6,
+                  fontSize: 11,
+                  fontWeight: 500,
+                  letterSpacing: "0.28em",
+                  textTransform: "uppercase",
+                  color: "rgba(212,175,55,0.6)",
+                }}
+              >
+                Welcome to
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontWeight: 700,
+                  fontSize: "clamp(18px, 5.5vw, 26px)",
+                  letterSpacing: "0.06em",
+                  color: "#f0d080",
+                  textShadow: "0 0 30px rgba(212,175,55,0.5), 0 2px 8px rgba(0,0,0,0.8)",
+                  lineHeight: 1.2,
+                }}
+              >
+                MY DIGITAL
+                <br />
+                JEWELRY BOX
+              </p>
+            </div>
+
+            {/* Primary action button */}
+            <button
+              onClick={(e) => { e.stopPropagation(); handleOpen(); }}
+              style={{
+                padding: "14px 40px",
+                borderRadius: 12,
+                background: "linear-gradient(135deg, #d4af37 0%, #b8922a 100%)",
+                border: "1.5px solid rgba(255,240,160,0.35)",
+                color: "#1a0520",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontWeight: 700,
+                fontSize: "clamp(13px, 4vw, 16px)",
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                cursor: "pointer",
+                boxShadow:
+                  "0 4px 24px rgba(212,175,55,0.4), 0 0 0 1px rgba(212,175,55,0.2)",
+                WebkitTapHighlightColor: "transparent",
+              }}
+            >
+              Open My Jewelry Box
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Footer links ── */}
       <div
         style={{

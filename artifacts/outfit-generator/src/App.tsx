@@ -8,6 +8,7 @@ import SavedPage from './pages/saved';
 import FavoritesPage from './pages/favorites';
 import BackupPage from './pages/backup';
 import WelcomePage from './pages/welcome';
+import HeroSplash from './pages/hero-splash';
 import { LockedScreen } from './components/LockedScreen';
 import { queryClient } from '@/lib/queryClient';
 import { useState, useEffect } from 'react';
@@ -49,7 +50,7 @@ function Router() {
 
 function AppShell() {
   const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
-  const [entered, setEntered] = useState<boolean>(() => isPreview);
+  const [splash, setSplash] = useState<"hero" | "welcome" | "entered">(() => isPreview ? "entered" : "hero");
   const { enabled, isLocked, authenticate, enableLock, disableLock } = useBiometricLock();
 
   // Pre-warm the ONNX background-removal model after the first paint so the
@@ -86,7 +87,14 @@ function AppShell() {
     <BiometricLockContext.Provider value={{ enabled, enableLock, disableLock }}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         <Router />
-        {!entered && <WelcomePage onEnter={() => setEntered(true)} />}
+        <AnimatePresence mode="wait">
+            {splash === "hero" && (
+              <HeroSplash key="hero" onContinue={() => setSplash("welcome")} />
+            )}
+            {splash === "welcome" && (
+              <WelcomePage key="welcome" onEnter={() => setSplash("entered")} />
+            )}
+          </AnimatePresence>
       </WouterRouter>
 
       {/* Biometric lock gate — sits above everything including the welcome splash */}
