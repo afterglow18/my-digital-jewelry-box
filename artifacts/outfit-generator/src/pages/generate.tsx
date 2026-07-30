@@ -33,8 +33,8 @@ const LABEL_FRAC = 0.042;
 // Layout markers calibrated for jewelry-box-bg.png (1086×1448).
 // All four sections are ~16-18% tall so photos render at the same size.
 const LM = {
-  doorL: 0.12,
-  doorR: 0.88,
+  doorL: 0.24,   // inner shelf — matches wardrobe.tsx
+  doorR: 0.76,   // inner shelf
   rows: [
     { sectionTop: 0.16, shelfY: 0.34 },
     { sectionTop: 0.34, shelfY: 0.51 },
@@ -216,8 +216,12 @@ export default function GeneratePage() {
   const labelH           = ready ? pH(ir, LABEL_FRAC) : 0;
   const minSecH          = ready ? Math.min(...LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))) : 0;
   const consistentPhotoH = Math.max(0, minSecH - labelH);
-  const carLeft = ready ? pX(ir, LM.doorL) : 0;
-  const carW    = ready ? pW(ir, LM.doorR - LM.doorL) : 0;
+  // Clamp to visible container — cover-scaling makes ir.left negative on iPhone
+  const WALL_PAD    = 44;
+  const rawCarLeft  = ready ? pX(ir, LM.doorL) : 0;
+  const rawCarRight = ready ? pX(ir, LM.doorR) : 0;
+  const carLeft = Math.max(rawCarLeft, WALL_PAD);
+  const carW    = Math.min(rawCarRight, (ready ? ir.containerW : 0) - WALL_PAD) - carLeft;
 
   return (
     <div
