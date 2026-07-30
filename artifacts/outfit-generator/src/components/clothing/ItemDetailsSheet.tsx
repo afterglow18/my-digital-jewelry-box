@@ -205,7 +205,7 @@ function BgRemovalOverlay({
                   <img src={originalUrl} alt="Original"
                     className="w-full object-contain" style={{ maxHeight: 200, display: "block" }} />
                   {selected === "original" && (
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-purple-600
                                     flex items-center justify-center shadow">
                       <Check size={13} color="white" strokeWidth={3} />
                     </div>
@@ -243,7 +243,7 @@ function BgRemovalOverlay({
                       <img src={cleanedUrl} alt="Cleaned"
                         className="w-full object-contain" style={{ maxHeight: 200, display: "block" }} />
                       {selected === "cleaned" && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-pink-500
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-purple-600
                                         flex items-center justify-center shadow">
                           <Check size={13} color="white" strokeWidth={3} />
                         </div>
