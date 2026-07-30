@@ -33,17 +33,9 @@ export default function WelcomePage({ onEnter }: Props) {
 
   const handleOpen = () => {
     if (phase !== "closed") return;
-    setPhase("opening");
-
-    // Hero fades in immediately as the lid swings — both happen together.
-    setHeroReady(true);
-
-    const afterOpen = OPEN_DURATION_MS + HOLD_AFTER_MS;
-    const afterExit = afterOpen + EXIT_DURATION_MS;
-
-    setTimeout(() => setPhase("open"),    OPEN_DURATION_MS);
-    setTimeout(() => setPhase("exiting"), afterOpen);
-    setTimeout(finish,                    afterExit);
+    // Skip the lid animation — go straight to exit fade → app.
+    setPhase("exiting");
+    setTimeout(finish, EXIT_DURATION_MS);
   };
 
   const isExiting = phase === "exiting";
