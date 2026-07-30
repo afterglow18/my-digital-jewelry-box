@@ -418,7 +418,7 @@ export default function SavedPage() {
                   {/* Last used date — shown only when it was a previous day */}
                   {outfit.lastUsedDate && !isLoggedToday(outfit) && (
                     <span className="text-[10px] text-black/40">
-                      Last used: {formatLastUsed(outfit.lastUsedDate)}
+                      Last worn: {formatLastUsed(outfit.lastUsedDate)}
                     </span>
                   )}
 
