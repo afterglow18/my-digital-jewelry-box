@@ -48,8 +48,8 @@ const LABEL_FRAC = 0.042;
 // All four sections are ~16-18% tall so photos render at the same size.
 // Row 1 → LED + velvet roll; Rows 2-4 → the three open shelf bays.
 const LM = {
-  doorL: 0.12,
-  doorR: 0.88,
+  doorL: 0.16,   // inner velvet wall — was 0.12 which put the carousel in the frame border
+  doorR: 0.84,   // inner velvet wall — was 0.88
   rows: [
     { sectionTop: 0.16, shelfY: 0.34 },
     { sectionTop: 0.34, shelfY: 0.51 },
@@ -185,8 +185,13 @@ export default function WardrobePage() {
   const labelH          = ready ? pH(ir, LABEL_FRAC) : 0;
   const minSecH         = ready ? Math.min(...LM.rows.map(lm => pH(ir, lm.shelfY - lm.sectionTop))) : 0;
   const consistentPhotoH = Math.max(0, minSecH - labelH);
-  const carLeft = ready ? pX(ir, LM.doorL) : 0;
-  const carW    = ready ? pW(ir, LM.doorR - LM.doorL) : 0;
+  // Clamp carousel to visible container — on cover-scaled images ir.left is
+  // negative (image wider than screen), so raw pX values can be off-screen.
+  const WALL_PAD = 6; // px safety margin from screen edge
+  const rawCarLeft  = ready ? pX(ir, LM.doorL) : 0;
+  const rawCarRight = ready ? pX(ir, LM.doorR) : 0;
+  const carLeft = Math.max(rawCarLeft, WALL_PAD);
+  const carW    = Math.min(rawCarRight, (ready ? ir.containerW : 0) - WALL_PAD) - carLeft;
 
   return (
     <>
