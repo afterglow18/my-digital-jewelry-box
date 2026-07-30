@@ -197,7 +197,7 @@ function BgRemovalOverlay({
                 onClick={() => handleSelect("original")}
                 className="flex-1 flex flex-col rounded-2xl overflow-hidden transition-all"
                 style={{
-                  outline: selected === "original" ? "3px solid #ec4899" : "3px solid transparent",
+                  outline: selected === "original" ? "3px solid #7c3aed" : "3px solid transparent",
                   outlineOffset: 2,
                 }}
               >
@@ -222,7 +222,7 @@ function BgRemovalOverlay({
                 disabled={status === "processing"}
                 className="flex-1 flex flex-col rounded-2xl overflow-hidden transition-all"
                 style={{
-                  outline: selected === "cleaned" && status === "ready" ? "3px solid #ec4899" : "3px solid transparent",
+                  outline: selected === "cleaned" && status === "ready" ? "3px solid #7c3aed" : "3px solid transparent",
                   outlineOffset: 2,
                   opacity: status === "processing" ? 0.6 : 1,
                   cursor: status === "processing" ? "default" : "pointer",
