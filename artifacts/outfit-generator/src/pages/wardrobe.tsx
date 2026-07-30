@@ -316,7 +316,7 @@ export default function WardrobePage() {
                       position: "absolute",
                       top: secTop + labelH, left: carLeft,
                       width: carW, height: rowIdx === 0 ? consistentPhotoH * 0.90 : consistentPhotoH,
-                      zIndex: 10, overflow: "visible",
+                      zIndex: 10, overflow: "hidden",
                     }}
                   >
                     <ClosetRow
