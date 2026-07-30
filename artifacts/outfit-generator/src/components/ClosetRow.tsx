@@ -235,8 +235,8 @@ export const ClosetRow = forwardRef<ClosetRowHandle, ClosetRowProps>(
         style={{
           position: "absolute",
           inset: 0,
-          // overflow visible so the scaled-up center card isn't clipped at edges
-          overflow: "visible",
+          overflow: "hidden",
+          transform: "translateZ(0)", // force iOS WKWebView to honour overflow:hidden
           touchAction: "pan-y",
           userSelect: "none",
           cursor: items.length > 1 ? "ew-resize" : "default",
