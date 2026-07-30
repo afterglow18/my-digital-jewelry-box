@@ -38,6 +38,8 @@ export interface SavedOutfit {
   itemIds: string[];
   items: ClothingItem[];
   createdAt: string;
+  /** Local date string "YYYY-MM-DD" of the last time this group was worn, or null if never. */
+  lastUsedDate: string | null;
 }
 
 export interface WardrobeStats {

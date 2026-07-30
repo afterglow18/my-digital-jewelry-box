@@ -194,7 +194,7 @@ export async function dbCreateOutfit(name: string, itemIds: string[]): Promise<S
   const now = new Date().toISOString();
   const outfitId = crypto.randomUUID();
 
-  const row: OutfitRow = { id: outfitId, name, notes: null, itemIds, createdAt: now };
+  const row: OutfitRow = { id: outfitId, name, notes: null, itemIds, createdAt: now, lastUsedDate: null };
   await db.put('outfits', row);
 
   const tx = db.transaction('outfit_items', 'readwrite');
@@ -215,12 +215,28 @@ export async function dbCreateOutfit(name: string, itemIds: string[]): Promise<S
 
 export async function dbUpdateOutfit(
   id: string,
-  data: { name?: string; notes?: string | null },
+  data: { name?: string; notes?: string | null; lastUsedDate?: string | null },
 ): Promise<void> {
   const db = await getDB();
   const existing = await db.get('outfits', id);
   if (!existing) return;
   await db.put('outfits', { ...existing, ...data });
+}
+
+/** Increment (+1) or decrement (-1) timesWorn on multiple clothing items at once. Never goes below 0. */
+export async function dbBulkAdjustTimesWorn(itemIds: string[], delta: number): Promise<void> {
+  const db = await getDB();
+  await Promise.all(
+    itemIds.map(async (id) => {
+      const item = await db.get('clothing', id);
+      if (!item) return;
+      await db.put('clothing', {
+        ...item,
+        timesWorn: Math.max(0, (item.timesWorn ?? 0) + delta),
+        updatedAt: new Date().toISOString(),
+      });
+    }),
+  );
 }
 
 export async function dbDeleteOutfit(id: string): Promise<void> {

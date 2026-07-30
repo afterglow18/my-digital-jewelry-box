@@ -11,6 +11,7 @@ import {
   dbDeleteOutfit,
   dbAddItemToOutfit,
   dbRemoveItemFromOutfit,
+  dbBulkAdjustTimesWorn,
 } from '@/lib/db';
 import type { SavedOutfit } from '@/types/local';
 
@@ -90,6 +91,34 @@ export function useRemoveItemFromOutfit() {
     mutationFn: ({ id, itemId }) => dbRemoveItemFromOutfit(id, itemId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+    },
+  });
+}
+
+// ── Log outfit used today / undo ──────────────────────────────────────────────
+
+/**
+ * Log (or undo-log) that a saved group was worn today.
+ * - Updates the outfit's lastUsedDate in the outfits store.
+ * - Bulk-adjusts timesWorn (+1 or -1) on every clothing item in the group.
+ * - Invalidates both outfit and clothing caches so every card reflects the new counts.
+ */
+export function useLogOutfitUsed() {
+  const qc = useQueryClient();
+  return useMutation<
+    void,
+    Error,
+    { outfitId: string; itemIds: string[]; lastUsedDate: string | null; delta: 1 | -1 }
+  >({
+    mutationFn: async ({ outfitId, itemIds, lastUsedDate, delta }) => {
+      await Promise.all([
+        dbUpdateOutfit(outfitId, { lastUsedDate }),
+        dbBulkAdjustTimesWorn(itemIds, delta),
+      ]);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getListOutfitsQueryKey() });
+      qc.invalidateQueries({ queryKey: ['clothing'] });
     },
   });
 }

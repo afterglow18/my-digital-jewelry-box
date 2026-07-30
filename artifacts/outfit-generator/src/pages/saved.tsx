@@ -5,6 +5,7 @@ import {
   useRenameOutfit,
   useAddItemToOutfit,
   useRemoveItemFromOutfit,
+  useLogOutfitUsed,
   getListOutfitsQueryKey,
 } from "@/hooks/useLocalOutfits";
 import type { ClothingItem } from "@/types/local";
@@ -65,6 +66,7 @@ export default function SavedPage() {
   const renameOutfit = useRenameOutfit();
   const removeItemFromOutfit = useRemoveItemFromOutfit();
   const addItemToOutfit = useAddItemToOutfit();
+  const logOutfitUsed = useLogOutfitUsed();
   const queryClient = useQueryClient();
   const { tier } = useEntitlements();
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -77,6 +79,8 @@ export default function SavedPage() {
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const notesInputRef = useRef<HTMLTextAreaElement>(null);
+  // Stores the previous lastUsedDate per outfit so "Undo" can restore it.
+  const prevLastUsedDateRef = useRef<Map<string, string | null>>(new Map());
 
   useEffect(() => {
     if (renamingId !== null) renameInputRef.current?.focus();
@@ -128,6 +132,30 @@ export default function SavedPage() {
       { id },
       { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListOutfitsQueryKey() }) },
     );
+  };
+
+  // ── Wear tracking ────────────────────────────────────────────────────────────
+
+  /** Today as "YYYY-MM-DD" in the device's local timezone. */
+  const todayStr = new Date().toLocaleDateString("en-CA");
+
+  /** "YYYY-MM-DD" → "M/D/YY" without new Date() to avoid UTC-shift off-by-one. */
+  const formatLastUsed = (d: string) => {
+    const [y, m, day] = d.split("-").map(Number);
+    return `${m}/${day}/${String(y).slice(2)}`;
+  };
+
+  const isLoggedToday = (outfit: { lastUsedDate?: string | null }) =>
+    outfit.lastUsedDate === todayStr;
+
+  const handleLogOutfitUsed = (outfit: { id: string; itemIds: string[]; lastUsedDate?: string | null }) => {
+    prevLastUsedDateRef.current.set(outfit.id, outfit.lastUsedDate ?? null);
+    logOutfitUsed.mutate({ outfitId: outfit.id, itemIds: outfit.itemIds, lastUsedDate: todayStr, delta: 1 });
+  };
+
+  const handleUndoOutfitLog = (outfit: { id: string; itemIds: string[] }) => {
+    const prev = prevLastUsedDateRef.current.get(outfit.id) ?? null;
+    logOutfitUsed.mutate({ outfitId: outfit.id, itemIds: outfit.itemIds, lastUsedDate: prev, delta: -1 });
   };
 
   const handleRemoveItem = (outfitId: string, itemId: string) => {
@@ -385,8 +413,35 @@ export default function SavedPage() {
                   </div>
                 </div>
 
-                {/* Footer */}
-                <div className="px-3 pb-3">
+                {/* Footer — wear tracking + item count */}
+                <div className="px-3 pb-3 border-t-2 border-black/10 pt-3 flex flex-col gap-2">
+                  {/* Last used date — shown only when it was a previous day */}
+                  {outfit.lastUsedDate && !isLoggedToday(outfit) && (
+                    <span className="text-[10px] text-black/40">
+                      Last used: {formatLastUsed(outfit.lastUsedDate)}
+                    </span>
+                  )}
+
+                  {/* Using This Today / Logged · Undo */}
+                  {!isLoggedToday(outfit) ? (
+                    <button
+                      onClick={() => handleLogOutfitUsed(outfit)}
+                      className="w-full py-2 border-2 border-black rounded-lg bg-white text-[11px] font-bold uppercase
+                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                      Using This Today
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleUndoOutfitLog(outfit)}
+                      className="w-full py-2 border-2 border-black rounded-lg bg-primary text-[11px] font-bold uppercase
+                                 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                                 active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                                 flex items-center justify-center gap-1.5">
+                      <Check className="w-3 h-3" /> Logged · Undo
+                    </button>
+                  )}
+
                   <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-wide">
                     {outfit.items?.length ?? 0} product{(outfit.items?.length ?? 0) !== 1 ? "s" : ""}
                   </span>
