@@ -48,8 +48,8 @@ const LABEL_FRAC = 0.042;
 // All four sections are ~16-18% tall so photos render at the same size.
 // Row 1 → LED + velvet roll; Rows 2-4 → the three open shelf bays.
 const LM = {
-  doorL: 0.16,   // inner velvet wall — was 0.12 which put the carousel in the frame border
-  doorR: 0.84,   // inner velvet wall — was 0.88
+  doorL: 0.20,   // inner shelf — pushed inward to keep side slots inside box walls
+  doorR: 0.80,   // inner shelf
   rows: [
     { sectionTop: 0.16, shelfY: 0.34 },
     { sectionTop: 0.34, shelfY: 0.51 },
@@ -187,7 +187,7 @@ export default function WardrobePage() {
   const consistentPhotoH = Math.max(0, minSecH - labelH);
   // Clamp carousel to visible container — on cover-scaled images ir.left is
   // negative (image wider than screen), so raw pX values can be off-screen.
-  const WALL_PAD = 6; // px safety margin from screen edge
+  const WALL_PAD = 28; // px safety margin — keeps side cards off the box frame walls
   const rawCarLeft  = ready ? pX(ir, LM.doorL) : 0;
   const rawCarRight = ready ? pX(ir, LM.doorR) : 0;
   const carLeft = Math.max(rawCarLeft, WALL_PAD);
