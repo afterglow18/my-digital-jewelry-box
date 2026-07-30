@@ -42,8 +42,9 @@ export default function WelcomePage({ onEnter }: Props) {
 
   return (
     <motion.div
+      initial={{ opacity: 0 }}
       animate={{ opacity: isExiting ? 0 : 1 }}
-      transition={{ duration: EXIT_DURATION_MS / 1000, ease: "easeIn" }}
+      transition={{ duration: isExiting ? EXIT_DURATION_MS / 1000 : 0.35, ease: "easeOut" }}
       onClick={phase === "closed" ? handleOpen : undefined}
       style={{
         position: "fixed",
@@ -344,39 +345,6 @@ export default function WelcomePage({ onEnter }: Props) {
               zIndex: 210,
             }}
           >
-            {/* "Welcome to / MY DIGITAL JEWELRY BOX" */}
-            <div style={{ textAlign: "center", pointerEvents: "none" }}>
-              <p
-                style={{
-                  margin: 0,
-                  marginBottom: 6,
-                  fontSize: 11,
-                  fontWeight: 500,
-                  letterSpacing: "0.28em",
-                  textTransform: "uppercase",
-                  color: "rgba(212,175,55,0.6)",
-                }}
-              >
-                Welcome to
-              </p>
-              <p
-                style={{
-                  margin: 0,
-                  fontFamily: "Georgia, 'Times New Roman', serif",
-                  fontWeight: 700,
-                  fontSize: "clamp(18px, 5.5vw, 26px)",
-                  letterSpacing: "0.06em",
-                  color: "#f0d080",
-                  textShadow: "0 0 30px rgba(212,175,55,0.5), 0 2px 8px rgba(0,0,0,0.8)",
-                  lineHeight: 1.2,
-                }}
-              >
-                MY DIGITAL
-                <br />
-                JEWELRY BOX
-              </p>
-            </div>
-
             {/* Primary action button */}
             <button
               onClick={(e) => { e.stopPropagation(); handleOpen(); }}
