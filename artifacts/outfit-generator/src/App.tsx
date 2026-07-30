@@ -86,15 +86,14 @@ function AppShell() {
   return (
     <BiometricLockContext.Provider value={{ enabled, enableLock, disableLock }}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-        <Router />
-        <AnimatePresence mode="wait">
-            {splash === "hero" && (
-              <HeroSplash key="hero" onContinue={() => setSplash("welcome")} />
-            )}
-            {splash === "welcome" && (
-              <WelcomePage key="welcome" onEnter={() => setSplash("entered")} />
-            )}
-          </AnimatePresence>
+        {/* App only mounts after splash — prevents any flash of the main UI */}
+        {splash === "entered" && <Router />}
+        {splash === "hero" && (
+          <HeroSplash onContinue={() => setSplash("welcome")} />
+        )}
+        {splash === "welcome" && (
+          <WelcomePage onEnter={() => setSplash("entered")} />
+        )}
       </WouterRouter>
 
       {/* Biometric lock gate — sits above everything including the welcome splash */}

@@ -42,9 +42,9 @@ export default function WelcomePage({ onEnter }: Props) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: isExiting ? 0 : 1 }}
-      transition={{ duration: isExiting ? EXIT_DURATION_MS / 1000 : 0.35, ease: "easeOut" }}
+      transition={{ duration: EXIT_DURATION_MS / 1000, ease: "easeIn" }}
       onClick={phase === "closed" ? handleOpen : undefined}
       style={{
         position: "fixed",
