@@ -464,7 +464,7 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
                          bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
                          shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                          active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-              Wearing This Today
+              Wearing Today
             </button>
           ) : (
             <button
