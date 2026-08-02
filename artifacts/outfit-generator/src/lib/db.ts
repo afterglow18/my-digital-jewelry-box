@@ -3,6 +3,8 @@
  * Works identically on iOS (via Capacitor's WKWebView) and web dev.
  *
  * Schema version 1: clothing_items, outfits, outfit_items.
+ * Vision fields (visionLabels, visionText, visionVersion) added to ClothingItem
+ * type in v2 — no IDB schema change needed; defaults applied at read time.
  */
 
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
@@ -69,16 +71,30 @@ function getDB(): Promise<IDBPDatabase<VanitySchema>> {
   return _dbPromise;
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Apply defaults for fields that may be absent on records written before they existed. */
+function normalizeItem(item: ClothingItem): ClothingItem {
+  return {
+    ...item,
+    visionLabels:  item.visionLabels  ?? [],
+    visionText:    item.visionText    ?? [],
+    visionVersion: item.visionVersion ?? 0,
+    timesWorn:     item.timesWorn     ?? 0,
+    lastWornDate:  item.lastWornDate  ?? null,
+  };
+}
+
 // ── Clothing ──────────────────────────────────────────────────────────────────
 
 export async function dbListClothing(category?: string): Promise<ClothingItem[]> {
   const db = await getDB();
   if (category) {
     const items = await db.getAllFromIndex('clothing', 'by-category', category);
-    return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(normalizeItem);
   }
   const items = await db.getAll('clothing');
-  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return items.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(normalizeItem);
 }
 
 export async function dbCreateClothing(data: CreateClothingData): Promise<ClothingItem> {
@@ -100,6 +116,9 @@ export async function dbCreateClothing(data: CreateClothingData): Promise<Clothi
     isFavorite: data.isFavorite ?? false,
     timesWorn: 0,
     lastWornDate: null,
+    visionLabels: [],
+    visionText: [],
+    visionVersion: 0,
     createdAt: now,
     updatedAt: now,
   };
@@ -221,6 +240,17 @@ export async function dbUpdateOutfit(
   const existing = await db.get('outfits', id);
   if (!existing) return;
   await db.put('outfits', { ...existing, ...data });
+}
+
+/** Save vision analysis results (labels, text, version) for a clothing item. */
+export async function dbUpdateVisionData(
+  id: string,
+  data: { visionLabels: string[]; visionText: string[]; visionVersion: number },
+): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('clothing', id);
+  if (!existing) return;
+  await db.put('clothing', { ...existing, ...data });
 }
 
 /** Increment (+1) or decrement (-1) timesWorn on multiple clothing items at once. Never goes below 0. */

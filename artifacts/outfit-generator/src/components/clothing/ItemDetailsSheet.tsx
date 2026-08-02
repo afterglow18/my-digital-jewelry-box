@@ -12,13 +12,14 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, Trash2, Save, ChevronDown, Loader2, Check, Wand2 } from "lucide-react";
+import { X, Heart, Trash2, Save, ChevronDown, Loader2, Check, Wand2, BookMarked } from "lucide-react";
 import type { ClothingItem, ClothingItemUpdateCategory } from "@/types/local";
 import { useUpdateClothingItem, useDeleteClothingItem, getListClothingQueryKey } from "@/hooks/useLocalWardrobe";
 import { getListOutfitsQueryKey } from "@/hooks/useLocalOutfits";
 import { useQueryClient } from "@tanstack/react-query";
 import { getImageUrl } from "@/lib/utils";
 import { removeBackground } from "@/lib/backgroundRemoval";
+import { AddToLookbookSheet } from "@/components/clothing/AddToLookbookSheet";
 
 // ── Small field components ────────────────────────────────────────────────────
 
@@ -65,6 +66,12 @@ interface ItemDetailsSheetProps {
   item: ClothingItem | null;
   onClose: () => void;
   onDeleted?: () => void;
+  /**
+   * When true: show "Add to Lookbook" as the second action button instead of
+   * "Clean Up Photo". Pass true from search results and favorites; never from
+   * the main wardrobe. Either way "Wearing Today" always shows.
+   */
+  showAddToLookbook?: boolean;
 }
 
 interface FormState {
@@ -291,10 +298,11 @@ function BgRemovalOverlay({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetProps) {
+export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook = false }: ItemDetailsSheetProps) {
   const [form, setForm]                           = useState<FormState | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [bgOverlayOpen, setBgOverlayOpen]         = useState(false);
+  const [lookbookOpen, setLookbookOpen]           = useState(false);
 
   // Optimistic image URL — updated instantly when user picks in the overlay,
   // before the DB write completes, so the sheet never flashes back to the old photo.
@@ -476,16 +484,28 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
               <Check className="w-3 h-3" /> Logged · Undo
             </button>
           )}
-          {!alreadyCleaned && (
+          {showAddToLookbook ? (
             <button
-              onClick={() => setBgOverlayOpen(true)}
+              onClick={() => setLookbookOpen(true)}
               className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2
                          bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
                          shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
                          active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-              <Wand2 className="w-3.5 h-3.5" />
-              Clean Up Photo
+              <BookMarked className="w-3.5 h-3.5" />
+              Add to Lookbook
             </button>
+          ) : (
+            !alreadyCleaned && (
+              <button
+                onClick={() => setBgOverlayOpen(true)}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2
+                           bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
+                           shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
+                <Wand2 className="w-3.5 h-3.5" />
+                Clean Up Photo
+              </button>
+            )
           )}
         </div>
 
@@ -584,6 +604,17 @@ export function ItemDetailsSheet({ item, onClose, onDeleted }: ItemDetailsSheetP
             originalUrl={displayedImageUrl}
             onClose={() => setBgOverlayOpen(false)}
             onSave={handleBgSave}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Add to Lookbook picker */}
+      <AnimatePresence>
+        {lookbookOpen && (
+          <AddToLookbookSheet
+            key="lookbook-sheet"
+            item={item}
+            onClose={() => setLookbookOpen(false)}
           />
         )}
       </AnimatePresence>

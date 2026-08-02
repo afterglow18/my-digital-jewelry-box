@@ -48,6 +48,15 @@ export function useListClothing(
   });
 }
 
+/** Fetch all clothing items across every category — used for search. */
+export function useListAllClothing() {
+  return useQuery<ClothingItem[]>({
+    queryKey: getListClothingQueryKey(),
+    queryFn: () => dbListClothing(),
+    staleTime: 0,
+  });
+}
+
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
 export function useGetWardrobeStats() {

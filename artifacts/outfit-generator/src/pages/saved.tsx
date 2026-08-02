@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   useListOutfits,
   useDeleteOutfit,
@@ -8,8 +8,10 @@ import {
   useLogOutfitUsed,
   getListOutfitsQueryKey,
 } from "@/hooks/useLocalOutfits";
+import { useListAllClothing } from "@/hooks/useLocalWardrobe";
 import type { ClothingItem } from "@/types/local";
-import { Trash2, Bookmark, Plus, Pencil, Check, X } from "lucide-react";
+import { Trash2, Bookmark, Plus, Pencil, Check, X, Search } from "lucide-react";
+import { runSearch } from "@/lib/search";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -62,6 +64,7 @@ function ItemPhoto({
 
 export default function SavedPage() {
   const { data: outfits, isLoading } = useListOutfits();
+  const { data: allItems = [] }      = useListAllClothing();
   const deleteOutfit = useDeleteOutfit();
   const renameOutfit = useRenameOutfit();
   const removeItemFromOutfit = useRemoveItemFromOutfit();
@@ -73,6 +76,24 @@ export default function SavedPage() {
   const [replacingSlot, setReplacingSlot] = useState<{ outfitId: string; category: SlotKey } | null>(null);
   const [addingExtra, setAddingExtra]     = useState<string | null>(null);
   const [detailsItem, setDetailsItem] = useState<ClothingItem | null>(null);
+  const [detailsFromSearch, setDetailsFromSearch] = useState(false);
+
+  // ── Search ────────────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const pageTopRef     = useRef<HTMLDivElement>(null);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    return runSearch(searchQuery, allItems, outfits ?? []);
+  }, [searchQuery, allItems, outfits]);
+
+  // Scroll to top the instant the user starts typing
+  useEffect(() => {
+    if (searchQuery) pageTopRef.current?.scrollIntoView({ behavior: "instant" as ScrollBehavior });
+  }, [!!searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const clearSearch = () => { setSearchQuery(""); searchInputRef.current?.blur(); };
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -185,7 +206,8 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-full flex flex-col pt-8 px-4 pb-8 bg-secondary/10 relative">
-      <header className="mb-6">
+      <div ref={pageTopRef} />
+      <header className="mb-4">
         <h1 className="text-4xl font-display font-bold uppercase tracking-tighter mb-1">Lookbook</h1>
         <div className="flex items-center justify-between">
           <p className="font-medium text-muted-foreground text-sm">Hall of fame.</p>
@@ -206,6 +228,99 @@ export default function SavedPage() {
           )}
         </div>
       </header>
+
+      {/* ── Search bar ─────────────────────────────────────────────────── */}
+      <div className="relative mb-5 flex items-center">
+        <Search className="absolute left-3 w-4 h-4 text-black/40 pointer-events-none" />
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search…"
+          className="w-full pl-9 pr-9 py-2.5 border-2 border-black rounded-full text-sm font-medium
+                     bg-white focus:outline-none focus:ring-2 focus:ring-primary
+                     placeholder:text-black/30"
+        />
+        {searchQuery && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-3 w-5 h-5 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 transition-colors"
+          >
+            <X className="w-3 h-3 text-black/60" />
+          </button>
+        )}
+      </div>
+
+      {/* ── Search results ─────────────────────────────────────────────── */}
+      {searchResults && (
+        <div className="flex flex-col gap-6 mb-6">
+          {searchResults.items.length === 0 && searchResults.groups.length === 0 && (
+            <p className="text-sm text-black/40 text-center py-8">No results for "{searchQuery}"</p>
+          )}
+
+          {/* Individual items */}
+          {searchResults.items.length > 0 && (
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-3">Items</p>
+              <div className="flex flex-col gap-2">
+                {searchResults.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => { setDetailsItem(item); setDetailsFromSearch(true); }}
+                    className="flex items-center gap-3 bg-white border-2 border-black rounded-xl px-3 py-2.5
+                               shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                               active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left"
+                  >
+                    <div className="w-12 h-12 border-2 border-black rounded overflow-hidden flex-shrink-0" style={{ background: "#FDECEF" }}>
+                      {item.imageObjectPath ? (
+                        <img src={getImageUrl(item.imageObjectPath)!} alt={item.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center"><span className="text-[10px] text-black/20">—</span></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-sm truncate">{item.name}</p>
+                      <p className="text-[10px] uppercase tracking-wide text-black/40">{item.category}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Saved groups */}
+          {searchResults.groups.length > 0 && (
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 mb-3">Saved Groups</p>
+              <div className="flex flex-col gap-2">
+                {searchResults.groups.map((outfit) => (
+                  <button
+                    key={outfit.id}
+                    onClick={clearSearch}
+                    className="flex items-center gap-3 bg-white border-2 border-black rounded-xl px-3 py-2.5
+                               shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
+                               active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all text-left"
+                  >
+                    <div className="flex gap-1 flex-shrink-0">
+                      {(outfit.items ?? []).slice(0, 3).map((member, i) => (
+                        <div key={i} className="w-10 h-10 border-2 border-black rounded overflow-hidden" style={{ background: "#FDECEF" }}>
+                          {member.imageObjectPath ? (
+                            <img src={getImageUrl(member.imageObjectPath)!} alt={member.name} className="w-full h-full object-contain" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center"><span className="text-[8px] text-black/20">—</span></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="flex-1 font-bold text-sm truncate">{outfit.name}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
 
       {atLimit && !isLoading && (
         <motion.div
@@ -229,13 +344,14 @@ export default function SavedPage() {
         </motion.div>
       )}
 
-      {isLoading ? (
+      {/* Normal content — hidden while a search query is active */}
+      {!searchResults && isLoading ? (
         <div className="flex flex-col gap-4">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-52 bg-muted animate-pulse border-2 border-black rounded-xl" />
           ))}
         </div>
-      ) : outfits && outfits.length > 0 ? (
+      ) : !searchResults && outfits && outfits.length > 0 ? (
         <div className="flex flex-col gap-6">
           {outfits.map((outfit) => {
             const bySlot = (outfit.items ?? []).reduce<Partial<Record<SlotKey, ClothingItem>>>(
@@ -450,7 +566,7 @@ export default function SavedPage() {
             );
           })}
         </div>
-      ) : (
+      ) : !searchResults ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-white border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl mt-8">
           <div className="w-14 h-14 bg-accent rounded-full flex items-center justify-center border-2 border-black mb-4">
             <Bookmark className="w-7 h-7" />
@@ -460,7 +576,7 @@ export default function SavedPage() {
             Head to your Jewelry Box, spin the slots, and save looks you love.
           </p>
         </div>
-      )}
+      ) : null}
 
       {/* Upgrade sheet */}
       <AnimatePresence>
@@ -500,7 +616,8 @@ export default function SavedPage() {
           <ItemDetailsSheet
             key={detailsItem.id}
             item={detailsItem}
-            onClose={() => setDetailsItem(null)}
+            onClose={() => { setDetailsItem(null); setDetailsFromSearch(false); }}
+            showAddToLookbook={detailsFromSearch}
           />
         )}
       </AnimatePresence>

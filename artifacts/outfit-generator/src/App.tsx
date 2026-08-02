@@ -17,7 +17,8 @@ import { syncWithRevenueCat } from '@/hooks/useEntitlements';
 import { warmUpBackgroundRemoval } from '@/lib/backgroundRemoval';
 import { useBiometricLock } from '@/hooks/useBiometricLock';
 import { BiometricLockContext } from '@/contexts/BiometricLockContext';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useVisionIndexer } from '@/hooks/useVisionIndexer';
 
 // Kick off RevenueCat configuration as early as possible.
 // initRevenueCat() returns a Promise — fire it now so configure() has
@@ -45,6 +46,31 @@ function Router() {
         <Redirect to="/" />
       </Switch>
     </AppLayout>
+  );
+}
+
+/** Mounts after the splash is done — runs the vision indexer and shows a toast. */
+function AppEntry() {
+  const { isIndexing, done, total } = useVisionIndexer();
+  return (
+    <>
+      <Router />
+      <AnimatePresence>
+        {isIndexing && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            className="fixed bottom-20 left-0 right-0 flex justify-center z-[200] pointer-events-none px-4"
+          >
+            <div className="bg-black/80 text-white text-[11px] font-medium px-4 py-2 rounded-full
+                            backdrop-blur-sm shadow-lg max-w-xs text-center">
+              Preparing photo search… {done}/{total}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -87,7 +113,7 @@ function AppShell() {
     <BiometricLockContext.Provider value={{ enabled, enableLock, disableLock }}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
         {/* App only mounts after splash — prevents any flash of the main UI */}
-        {splash === "entered" && <Router />}
+        {splash === "entered" && <AppEntry />}
         {splash === "hero" && (
           <HeroSplash onContinue={() => setSplash("welcome")} />
         )}
