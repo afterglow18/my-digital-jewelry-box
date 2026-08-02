@@ -49,14 +49,23 @@ function Router() {
   );
 }
 
+const TOAST_DELAY_MS = 4000; // wait 4 s after mount before revealing the toast
+
 /** Mounts after the splash is done — runs the vision indexer and shows a toast. */
 function AppEntry() {
   const { isIndexing, done, total } = useVisionIndexer();
+  const [toastReady, setToastReady] = useState(false);
+
+  useEffect(() => {
+    const id = setTimeout(() => setToastReady(true), TOAST_DELAY_MS);
+    return () => clearTimeout(id);
+  }, []);
+
   return (
     <>
       <Router />
       <AnimatePresence>
-        {isIndexing && (
+        {isIndexing && toastReady && (
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
