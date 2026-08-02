@@ -237,7 +237,7 @@ export default function SavedPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search…"
+          placeholder="Search by name, category, or notes…"
           className="w-full pl-9 pr-9 py-2.5 border-2 border-black rounded-full text-sm font-medium
                      bg-white focus:outline-none focus:ring-2 focus:ring-primary
                      placeholder:text-black/30"
