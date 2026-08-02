@@ -18,7 +18,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getListClothingQueryKey } from '@/hooks/useLocalWardrobe';
 
 const WEB_TARGET = 4;
-const IOS_TARGET = 1;
+/**
+ * v2 = iOS Vision + canvas color (current).
+ * v1 = old iOS-only (no colors) — must be re-indexed.
+ */
+const IOS_TARGET = 2;
 const DELAY_MS   = 350;
 
 export interface IndexerState {

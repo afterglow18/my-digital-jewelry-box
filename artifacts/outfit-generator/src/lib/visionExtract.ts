@@ -147,12 +147,21 @@ export interface VisionResult {
 
 export async function extractVisionData(dataUrl: string): Promise<VisionResult> {
   if (Capacitor.isNativePlatform()) {
-    try {
-      const { labels, text } = await VisionPlugin.analyze({ dataUrl });
-      return { labels, text, version: 1 };
-    } catch {
-      // Fall through to web canvas as fallback
-    }
+    // Run native Vision classification + canvas color extraction in parallel.
+    // Apple Vision returns object/scene labels ("shoe", "high heel") but no
+    // color names; the canvas pass fills that gap.
+    const [visionResult, colorLabels] = await Promise.all([
+      VisionPlugin.analyze({ dataUrl }).catch(() => ({ labels: [] as string[], text: [] as string[] })),
+      extractWebColors(dataUrl).catch(() => [] as string[]),
+    ]);
+
+    // Merge: color names first (most useful for search), then Vision object labels
+    const merged = [...colorLabels, ...visionResult.labels];
+    // Deduplicate while preserving order
+    const seen = new Set<string>();
+    const labels = merged.filter((l) => { if (seen.has(l)) return false; seen.add(l); return true; });
+
+    return { labels, text: visionResult.text, version: 2 };
   }
 
   // Web canvas
