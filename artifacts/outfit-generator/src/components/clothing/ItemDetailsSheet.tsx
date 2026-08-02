@@ -498,11 +498,15 @@ export function ItemDetailsSheet({ item, onClose, onDeleted, showAddToLookbook =
             !alreadyCleaned && (
               <button
                 onClick={() => setBgOverlayOpen(true)}
+                disabled={bgOverlayOpen}
                 className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2
                            bg-white border-2 border-black rounded-full text-[11px] font-bold uppercase
                            shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all">
-                <Wand2 className="w-3.5 h-3.5" />
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
+                {bgOverlayOpen
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <Wand2 className="w-3.5 h-3.5" />}
                 Clean Up Photo
               </button>
             )

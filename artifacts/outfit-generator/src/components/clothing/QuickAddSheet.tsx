@@ -498,12 +498,17 @@ export function QuickAddSheet({ open, onOpenChange, category, existingCount, onC
               </button>
               <button
                 onClick={handleSave}
+                disabled={bgProcessing && selected === "cleaned"}
                 className="flex-1 py-3 border-2 border-black rounded-xl font-display font-bold
                            text-sm uppercase tracking-tight bg-primary
                            shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]
-                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all"
+                           active:translate-x-0.5 active:translate-y-0.5 active:shadow-none transition-all
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
+                           flex items-center justify-center gap-2"
               >
-                {bgProcessing && selected === "cleaned" ? "Processing…" : "✓ Save to Closet"}
+                {bgProcessing && selected === "cleaned"
+                  ? <><Loader2 size={16} className="animate-spin" /> Cleaning…</>
+                  : "✓ Save to Closet"}
               </button>
             </div>
           </div>
